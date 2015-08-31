@@ -1,0 +1,2 @@
+DEBUG:root:select , volume, close from DAT_price where symbol = 'SPM.MI'
+DEBUG:root:select date, volume, close from DAT_price where symbol = 'SPM.MI'
