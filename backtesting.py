@@ -7,7 +7,7 @@ log.basicConfig(filename='backtesting.log', level=log.DEBUG) # log to file
 import sqlite3
 import pdb
 import indicators
-
+import math
 
 
 class Trade:
@@ -41,7 +41,7 @@ class Result:
 class Test:
 	"""A single unit of test."""
 	
-	def __init__(self, strategy, initial_investment=10000.00, transaction_cost=9.00, ongoing_charges=None):
+	def __init__(self, strategy, capital=10000.00, transaction_cost=9.00, ongoing_charges=None):
 		"""Parameters:
 		
 			strategy :: an indicators.Strategy object
@@ -51,16 +51,49 @@ class Test:
 		"""
 		
 		self.strategy = strategy
-		self.initial_investment = initial_investment
-		self.capital = initial_investment
+		self.portfolio = int(0)
+		self.capital = capital
 		self.tcost = transaction_cost
 		self.charges = ongoing_charges
-		
+		self.trade_history = []
 		
 	def run(self):
 
 		result = Result(5000, [])
 		data = self.strategy.get_data()
+
+		for point in data:
+			
+			date = point[0]
+			advice = point[2]
+			unitprice = point[1]
+			if advice == indicators.BUY:
+				
+				quantity = int(math.modf(self.capital / unitprice)[1]) # buy as much stocks as your whole capital permits
+				self.portfolio += quantity
+				totalcost = quantity * unitprice
+				self.capital -= totalcost
+				
+				trade = Trade(date, quantity, unitprice, indicators.BUY)
+				self.trade_history.append(trade)
+				log.debug("{0} - Bought {1} for {2}, totalling {3}".format(date, quantity, unitprice, totalcost))
+				
+			elif advice == indicators.SELL:
+				
+				quantity = self.portfolio # sell all stocks
+				self.portfolio = 0
+				totalcost = quantity * unitprice
+				self.capital += totalcost
+				
+				trade = Trade(date, quantity, unitprice, indicators.SELL)
+				self.trade_history.append(trade)
+				log.debug("{0} - :: Sold {1} for {2}, totalling {3}".format(date, quantity, unitprice, totalcost))
+				
+			else:
+				pass
+				
+			
+				
 		return result
 	
 	

@@ -11,164 +11,9 @@ import pdb
 BUY = 1
 SELL = -1
 
-
-"""TODO: at the moment, every moment reloads data from the source, in 
-order to filter on mindate and maxdate directly from the datasource.
-Maybe it's more performing to load all the data on __init__ method and
-filter on the in memory data every time a method is called.
-"""
-
-
-class SymbolAnalyzer:
-	"""A decorator for the yahoo._Symbol class. Augmented symbols 
-	instances, can be queried for technical analysis data.
-	"""
-	
-	def __init__(self, symbol, matplotlib=False):
-		
-		self.symbol = symbol
-		self.matplotlib_formatted_dates = matplotlib
-	
-	
-	def get_data_DELETE(self, columns=[], mindate = None, maxdate = None):
-		return self.symbol.get_data(columns, mindate, maxdate)
-		
-	
-	def get_onbalancevolume(self):
-		"""Retrieve a timeseries of closings with associated volumes:
-		
-			[(date1, closing1, volume1), (date2, closing2, volume2), ...]
-		
-		then returns a timeseries with the same dimension, containing the 
-		OBVs:
-			
-			[(date1, obv1), (date2, obv2), ...]
-
-
-		The OBV is calculated according to Joe Granville's original 
-		version of the OBV: we add volume on days that the close is 
-		higher than the day before and subtract the volume on days that 
-		the price is lower than the day before.
-		"""
-
-
-		closings = self.get_closings()
-		volumes = self.get_volumes()
-		
-		tclosings = numpy.transpose(closings)
-		tvolumes = numpy.transpose(volumes)
-		
-		tdata = [tclosings[0], tclosings[1], tvolumes[1]]
-		data = numpy.transpose(tdata)
-		
-		
-		results = []
-		for idx in range(len(data)):
-		
-			#~ print "Before {0}".format(obv)
-			#~ print "Volume {0}".format(closings[idx][2])
-			#~ print "Price diff {0}".format(closings[idx-1][1] - closings[idx][1])
-			
-			if idx == 0:
-				obv = data[idx][2] # set starting volume
-				
-			# compare prices
-			elif closings[idx-1][1] < data[idx][1]:
-				obv += data[idx][2] # add volume
-				
-			else:
-				obv -= data[idx][2] # subtract volume
-				
-			#~ print "After {0}".format(obv)
-			#~ print ""
-				
-			results.append(tuple([data[idx][0], obv]))
-				
-		return results
-	
-	
-	
-	def get_volumes(self):
-		"""Return a timeseries:
-		
-			[(date1, volume1), (date2, volume2), ...]
-			
-		"""
-		
-		data = self.symbol.get_data(['date_UNIX', 'volume'])
-
-		for idx in range(len(data)):
-			data[idx] = (self.transform_date(data[idx][0]), data[idx][1])
-
-		return data
-		
-	
-	def get_ochlv(self):
-		"""Return an array of points:
-		
-			([(date1, open1, close1, high1, low1),
-				(date1, open1, close1, high1, low1), ... ]
-			
-		"""
-		
-		data = self.symbol.get_data(['date_UNIX', 'open', 'close', 'high', 'low'])
-		
-		for idx in range(len(data)):
-			data[idx] = (self.transform_date(data[idx][0]), # date
-				data[idx][1], # open
-				data[idx][2], # close
-				data[idx][3], # high
-				data[idx][4] # low
-			)
-		
-		return data
-		
-	
-	def get_closings(self):
-		"""Return an array of points:
-		
-			[(date1, close1), (date2, close2), ...]
-			
-		"""
-		
-		data = self.symbol.get_data(['date_UNIX', 'close'])
-
-		for idx in range(len(data)):
-			data[idx] = (self.transform_date(data[idx][0]), data[idx][1])
-		
-		return data
-		
-		
-	def get_movingaverage (self, window):
-
-		closings = self.get_closings()
-		tclosings = numpy.transpose(closings)
-
-		weights = numpy.repeat(1.0, window)/window		
-		sma = numpy.convolve(tclosings[1], weights, 'valid') # the MA is obtained using a convolution
-		
-		result = []
-		for idx in range(len(sma)):
-			result.append(tuple([tclosings[0][idx], sma[idx]]))
-		
-		return result
-		
-
-	def transform_date(self, mydate):
-		"""All dates, in order to be processed by Matplotlib, must be
-		transformed in float values.
-		"""
-
-		if self.matplotlib_formatted_dates:
-			#~ return mdates.datestr2num(str(mydate))
-			return matplotlib.dates.epoch2num(mydate)
-		else:
-			return mydate
-
-
 class Strategy(object):
-	"""A decorator for the yahoo._Symbol class. Strategy instances, can 
-	be queried for technical analysis data with buy/sell indications.
+	"""Strategy instances, can be queried for technical analysis data 
+	with buy/sell indications.
 	
 	This is only a blue print for the other strategy classes.
 	"""
@@ -184,7 +29,8 @@ class Strategy(object):
 			[(date1, value1, indication1), ... ]
 			
 		"""
-		pass
+		raise Exception("Not implemented")
+		
 		
 	def transform_date(self, mydate):
 		"""All dates, in order to be processed by Matplotlib, must be
@@ -255,10 +101,11 @@ class StrategyMaCrossover(Strategy):
 		for idx in range(len(maslow)): # maslow has more points than mafast
 			crossing = 0
 			if ((maslow[idx][1] <= mafast[idx][1]) & (previous_maslow[idx][1] >= previous_mafast[idx][1])):
-				crossing = BUY
-			if ((maslow[idx][1] >= mafast[idx][1]) & (previous_maslow[idx][1] <= previous_mafast[idx][1])):
-				crossing = SELL
-			crossings.append(tuple([maslow[idx][0], maslow[idx][1], crossing]))
+				crossings.append(tuple([maslow[idx][0], maslow[idx][1], BUY]))
+			elif ((maslow[idx][1] >= mafast[idx][1]) & (previous_maslow[idx][1] <= previous_mafast[idx][1])):
+				crossings.append(tuple([maslow[idx][0], maslow[idx][1], SELL]))
+			else:
+				pass # skip 
 		
 		return crossings
 		

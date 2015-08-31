@@ -2,3 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# exclude log files
+*.log
+
+# exclude sqlite3 files
+*.db3
+

@@ -5,6 +5,7 @@ import yahoo
 import os
 import random
 import pdb
+import market
 
 TEST_DB3_FILE = "yahoo.db3"
 TEST_SYMBOL = "SPM.MI"
@@ -24,8 +25,7 @@ class SymbolAnalyzer_test(unittest.TestCase):
 	def setUp(self):
 
 		source = yahoo.LocalSource(TEST_DB3_FILE)
-		symbol = source.get_symbol(TEST_SYMBOL)
-		self.indicator = indicators.SymbolAnalyzer(symbol)
+		self.symbol = market.Symbol(source, TEST_SYMBOL)
 	
 	def tearDown(self):
 		pass
@@ -36,7 +36,7 @@ class SymbolAnalyzer_test(unittest.TestCase):
 		pass
 
 	def test_get_closings(self):
-		rows = self.indicator.get_closings()
+		rows = self.symbol.get_closings()
 		self.assertTrue( len(rows) > 0 )
 
 	@unittest.skip("TODO")
@@ -57,8 +57,8 @@ class SymbolAnalyzer_test(unittest.TestCase):
 				
 	def test_get_onbalancevolume(self):
 		
-		volumes = self.indicator.get_volumes()
-		rows = self.indicator.get_onbalancevolume()
+		volumes = self.symbol.get_volumes()
+		rows = self.symbol.get_onbalancevolume()
 		self.assertTrue( len(rows) > 0 )
 
 	@unittest.skip("TODO")
@@ -80,8 +80,7 @@ class StrategyMaCrossover_test(unittest.TestCase):
 	def setUp(self):
 
 		source = yahoo.LocalSource(TEST_DB3_FILE)
-		self.symbol = source.get_symbol(TEST_SYMBOL)
-		#~ self.indicator = indicators.SymbolAnalyzer(symbol)
+		self.symbol = market.Symbol(source, TEST_SYMBOL, mindate = None, maxdate = None, matplotlib=False)
 	
 	def tearDown(self):
 		pass

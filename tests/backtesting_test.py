@@ -1,11 +1,13 @@
 
 import unittest
 import backtesting
+
 import yahoo
 import indicators
+import market
 
 
-TEST_SYMBOL = "ENI.MI"
+TEST_SYMBOL = "SPM.MI"
 
 class Test_test(unittest.TestCase):
 	
@@ -17,9 +19,9 @@ class Test_test(unittest.TestCase):
 
 	def test_run(self):
 		
-		symbol = self.source.get_symbol(TEST_SYMBOL)
-		strategy = indicators.StrategyMaCrossover(symbol, 200, 50)
-		test = backtesting.Test(strategy, initial_investment=10000.00, transaction_cost=9.00, ongoing_charges=None)
+		symbol = market.Symbol(self.source, TEST_SYMBOL, mindate = None, maxdate = None, matplotlib=False)
+		strategy = indicators.StrategyMaCrossover(symbol, 50, 20)
+		test = backtesting.Test(strategy, capital=10000.00, transaction_cost=9.00, ongoing_charges=None)
 		
 		result = test.run()
 		

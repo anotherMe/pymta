@@ -3,28 +3,28 @@ import matplotlib.pyplot as plt
 import matplotlib.finance as fin
 import numpy
 import indicators
-import indicators
 
 
 import pdb
 
 class Plotter:
 	
-	def __init__(self):
-		pass
+	def __init__(self, title='No title'):
+		self.title = title
 	
 	def draw_simple(self, symbol):
 		
 		data = symbol.get_closings()
-		data = numpy.transpose(data)
-		plt.plot_date(data[0], data[1], fmt="-")
+		tdata = numpy.transpose(data)
+		plt.plot_date(tdata[0], tdata[1], fmt="-")
 
 
 	def draw_candlestick(self, symbol):
+		"""NOTE: Too much points in the timeseries may produce a blank 
+		plot.
+		"""
 		
 		data = symbol.get_ochlv()
-		#pdb.set_trace()
-		#~ data = numpy.transpose(data)
 		
 		ax = plt.subplot(111)
 		fin.candlestick_ochl(ax, data, width=0.5, colorup=u'g', colordown=u'r', alpha=1.0)
@@ -34,11 +34,9 @@ class Plotter:
 
 	def draw_moving_average_crossover(self, symbol, period_slow, period_fast):
 		
-		augmented = indicators.SymbolAnalyzer(symbol, True)
-		strategy = indicators.StrategyMaCrossover(augmented, period_slow, period_fast, True)
+		strategy = indicators.StrategyMaCrossover(symbol, period_slow, period_fast, True)
 		
 		ax1 = plt.subplot(111)
-
 		
 		### plot closing values ###
 		
@@ -48,13 +46,13 @@ class Plotter:
 		
 		### plot first moving average ###
 		
-		ma1 = augmented.get_movingaverage(period_slow)
+		ma1 = symbol.get_movingaverage(period_slow)
 		tma1 = numpy.transpose(ma1)
 		ax1.plot_date(tma1[0], tma1[1], fmt="-")
 
 		### plot second moving average ###
 		
-		ma2 = augmented.get_movingaverage(period_fast)
+		ma2 = symbol.get_movingaverage(period_fast)
 		tma2 = numpy.transpose(ma2)
 		ax1.plot_date(tma2[0], tma2[1], fmt="-")
 		
@@ -139,7 +137,7 @@ class Plotter:
 			tma = numpy.transpose(ma)
 			plt.plot_date(tma[0], tma[1], fmt="-")
 		
-		plt.title('{0} day closing values'.format(sample.symbol.name))
+		plt.title('{0} day closing values'.format(self.title))
 		
 		plt.subplot(212)
 		plt.plot_date(tvolumes[0], tvolumes[1], fmt="-")
@@ -155,7 +153,7 @@ class Plotter:
 		
 		plt.subplot(211)
 		plt.plot_date(values[0], values[1], fmt="-")
-		plt.title('{0} day closing values'.format(sample.symbol.name))
+		plt.title('{0} day closing values'.format(self.title))
 		
 		plt.subplot(212)
 		plt.plot_date(volumes[0], volumes[1], fmt="-")
@@ -179,7 +177,7 @@ class Plotter:
 		
 		plt.subplot(311)
 		plt.plot_date(values[0], values[1], fmt="-")
-		plt.title('{0} day closing values'.format(sample.symbol.name))
+		plt.title('{0} day closing values'.format(self.title))
 		
 		plt.subplot(312)
 		plt.plot_date(volumes[0], volumes[1], fmt="-")

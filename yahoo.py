@@ -9,6 +9,7 @@ import urllib
 import csv
 import datetime as dt
 import os
+import data
 
 import pdb
 
@@ -27,55 +28,13 @@ class DataError(Exception):
 	def __str__(self):
 		return repr(self.value)
 		
-
-class _Symbol:
-	"""
-	Constructor takes a data source (LocalSource or OnlineSource) object 
-	and a symbol name.
-	
-	You're not supposed to instantiate this class. Use get_symbol
-	method instead.
-	"""
-	
-	def __init__(self, datasource, symbol_name, mindate = None, maxdate = None):
-		"""Parameters:
-			
-			datasource :: a valid yahoo.LocalSource or yahoo.OnlineSource
-			symbol_name :: the Yahoo symbol used to identify the stock
-			mindate :: from date
-			maxdate :: to date
-			
-		"""
-		
-		self.name = symbol_name
-		self.source = datasource
-		
-		# just to save some typing, define mindate and maxdate as instance properties
-		self.mindate = mindate
-		self.maxdate = maxdate
-
-
-	def get_data(self, columns=[], mindate = None, maxdate = None):
-		
-		if mindate:
-			self.mindate = mindate
-			
-		if maxdate:
-			self.maxdate = maxdate
-		
-		return self.source._query(self.name, columns, self.mindate, self.maxdate)
-
-
-class OnlineSource():
+class OnlineSource(data.Source):
 	
 	def __init__(self):
-		pass
+		
+		super(OnlineSource, self).__init__()
 
-	def get_symbol(self, symbol_name):
-		symbol = _Symbol(self, symbol_name)
-		return symbol
-
-	def _query(self, symbol, columns=[], mindate=None, maxdate=None):
+	def query(self, symbol, columns=[], mindate=None, maxdate=None):
 		"""Returns a list of tuples."""
 		
 		raise Exception("Not implemented yet")
@@ -126,11 +85,13 @@ class OnlineSource():
 			return True
 
 
-class LocalSource():
+class LocalSource(data.Source):
 	
 	def __init__(self, path):
 		"""Open database if it already exists; initialize a new one
 		otherwise."""
+		
+		super(LocalSource, self).__init__()
 		
 		initialize = False
 		if not os.path.isfile(path):
@@ -147,11 +108,6 @@ class LocalSource():
 			cur.execute("select * from DAT_EoD limit 1")
 		except Exception, ex:
 			raise Exception("Table DAT_EoD not found. Are you sure this is a proper data source ?")
-
-
-	def get_symbol(self, symbol_name):
-		symbol = _Symbol(self, symbol_name)
-		return symbol
 
 
 	def exists(self, symbol):
@@ -176,8 +132,20 @@ class LocalSource():
 		else:
 			return False
 
+	def _query(self, sql):
+		"""Low level method to execute queries."""
+		
+		log.debug(sql)
+		
+		cur = self.conn.cursor()
+		cur.execute (sql)
+		rows = cur.fetchall()
+		cur.close()
+		
+		return rows
+		
 
-	def _query(self, symbol, columns=[], mindate=None, maxdate=None):
+	def query(self, symbol, columns=[], mindate=None, maxdate=None):
 		"""Returns a list of tuples."""
 		
 		sql = 'select *'
@@ -201,10 +169,8 @@ class LocalSource():
 		if maxdate:
 			sql = sql + " and date >= strftime('%Y-%m-%d', '{0}')".format(maxdate)
 		
-		cur = self.conn.cursor()
-		cur.execute (sql)
-		rows = cur.fetchall()
-		cur.close()
+		
+		rows = self._query(sql)
 	
 		if len(rows) == 0: 
 			raise DataError("No data can be retrieved for the given symbol.")
