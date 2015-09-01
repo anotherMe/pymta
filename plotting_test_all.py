@@ -1,31 +1,29 @@
 #!/usr/bin/python
 
+"""
+	Launch all the plotting.Plotter class methods.
+	
+	This script is supposed to act as a test for the plotting.Plotter
+	class.
+	
+"""
+
 import yahoo
 from plotting import Plotter
 import market
 import argparse
 
-SQLITE_DATABASE = "yahoo.db3"
+LOCAL_DATASOURCE = "yahoo.db3"
+TEST_SYMBOL = "ENI.MI"
 
 
 if __name__=='__main__':
 
 
-	## argument parsing ##
-
-	parser = argparse.ArgumentParser(description='Process some integers.')
-	parser.add_argument('--symbol', required=True,
-		help='the symbol to plot, according to yahoo convention (ie: SPM.MI)')
-	parser.add_argument('--mindate', help='(optional) plot from date')
-	parser.add_argument('--maxdate', help='(optional) plot until date')
-	args = parser.parse_args()
-	
-
 	## plotting ##
 
-	source = yahoo.LocalSource(SQLITE_DATABASE)
-	symbol = market.Symbol(source, args.symbol, args.mindate, 
-		args.maxdate, matplotlib=True)
+	source = yahoo.LocalSource(LOCAL_DATASOURCE)
+	symbol = market.Symbol(source, TEST_SYMBOL, None, None, matplotlib=True)
 	
 	p = Plotter('Simple')
 	p.draw_simple(symbol)
