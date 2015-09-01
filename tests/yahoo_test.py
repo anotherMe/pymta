@@ -92,7 +92,7 @@ class LocalSource(unittest.TestCase):
 		self.assertTrue(len(data) > 0)
 
 	def testquery_wColumns(self):
-		data = self.source.query("TEST", columns=['date_UNIX', 'volume', 'close'])
+		data = self.source.query("TEST", columns=['date', 'volume', 'close'])
 		self.assertTrue(len(data) > 0)
 
 	@unittest.skip("TODO")
@@ -143,8 +143,8 @@ class LocalSource(unittest.TestCase):
 		
 		conn = sqlite3.connect(TEST_DB3_FILE)
 		cur = conn.cursor()		
-		cur.execute("select date from DAT_EoD where symbol = '{0}'"
-			" order by date desc limit 1".format(ONLINE_TEST_SYMBOL))
+		cur.execute("select date_STR from DAT_EoD where symbol = '{0}'"
+			" order by date_STR desc limit 1".format(ONLINE_TEST_SYMBOL))
 
 		maxdate_str = cur.fetchone()[0]
 		conn.close()

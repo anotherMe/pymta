@@ -92,7 +92,7 @@ class Symbol:
 			
 		"""
 		
-		data = self.source.query(self.name, ['date_UNIX', 'volume'], self.mindate, self.maxdate)
+		data = self.source.query(self.name, ['date', 'volume'], self.mindate, self.maxdate)
 
 		for idx in range(len(data)):
 			data[idx] = (self.transform_date(data[idx][0]), data[idx][1])
@@ -108,7 +108,7 @@ class Symbol:
 			
 		"""
 		
-		data = self.source.query(self.name, ['date_UNIX', 'open', 'close', 'high', 'low'], self.mindate, self.maxdate)
+		data = self.source.query(self.name, ['date', 'open', 'close', 'high', 'low'], self.mindate, self.maxdate)
 		
 		for idx in range(len(data)):
 			data[idx] = (self.transform_date(data[idx][0]), # date
@@ -128,7 +128,7 @@ class Symbol:
 			
 		"""
 		
-		data = self.source.query(self.name, ['date_UNIX', 'close'], self.mindate, self.maxdate)
+		data = self.source.query(self.name, ['date', 'close'], self.mindate, self.maxdate)
 
 		for idx in range(len(data)):
 			data[idx] = (self.transform_date(data[idx][0]), data[idx][1])

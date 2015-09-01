@@ -45,8 +45,8 @@ INSERT INTO `DAT_symbol` VALUES('YOOX','YOOX.MI','IT0003540470');
 CREATE TABLE "DAT_EoD" (
 	`id`    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	`symbol`    TEXT NOT NULL,
-	`date`  TEXT NOT NULL,
-	`date_UNIX`  INTEGER NULL, -- date expressed in seconds from epoch
+	`date`  INTEGER NULL, -- date expressed in seconds from Epoch
+	`date_STR`  TEXT NOT NULL,
 	`open`  REAL,
 	`high`  REAL,
 	`low`   REAL,
@@ -102,5 +102,5 @@ COMMIT;
 
 -- indexes
 
-CREATE  INDEX `idx_symbol_date_UNIX` ON `DAT_EoD` (`symbol` ASC,`date_UNIX` ASC);
+CREATE  INDEX `idx_symbol_date` ON `DAT_EoD` (`symbol` ASC,`date` ASC);
 

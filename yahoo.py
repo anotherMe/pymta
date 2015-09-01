@@ -146,7 +146,14 @@ class LocalSource(data.Source):
 		
 
 	def query(self, symbol, columns=[], mindate=None, maxdate=None):
-		"""Returns a list of tuples."""
+		"""
+		Parameters:
+		
+			symbol : the name of the symbol using Yahoo convention (ie: SPM.MI)
+			columns : a list of column names
+			mindate : a string in the format '%Y-%m-%d'
+			maxdate : a string in the format '%Y-%m-%d'
+		"""
 		
 		sql = 'select *'
 		if len(columns) > 0:
@@ -163,11 +170,13 @@ class LocalSource(data.Source):
 		
 		sql += " from DAT_EoD where symbol = '{0}'".format(symbol)
 		
+		# FIXME: use `date` field instead of `date_STR`
+		
 		if mindate:
-			sql = sql + " and date >= strftime('%Y-%m-%d', '{0}')".format(mindate)
+			sql = sql + " and date_STR >= strftime('%Y-%m-%d', '{0}')".format(mindate)
 		
 		if maxdate:
-			sql = sql + " and date >= strftime('%Y-%m-%d', '{0}')".format(maxdate)
+			sql = sql + " and date_STR >= strftime('%Y-%m-%d', '{0}')".format(maxdate)
 		
 		
 		rows = self._query(sql)
@@ -183,11 +192,16 @@ class LocalSource(data.Source):
 
 
 	def get_maxdate(self, symbol_name):
-		"""Returns most recent date available for the given symbol."""
+		"""Get the most recent date available for the given symbol.
+		
+		Returns a datetime object.
+		"""
+		
+		# FIXME: use `date` field instead of `date_STR`
 		
 		cur = self.conn.cursor()
-		cur.execute("select date from DAT_EoD where symbol = '{0}'"
-			" order by date_UNIX desc limit 1".format(symbol_name))
+		cur.execute("select date_STR from DAT_EoD where symbol = '{0}'"
+			" order by date_STR desc limit 1".format(symbol_name))
 
 		row = cur.fetchone()
 		maxdate_str = row[0]
@@ -261,14 +275,14 @@ class LocalSource(data.Source):
 				continue
 			
 			row.insert(0, symbol) # insert symbol
-			cur.execute('INSERT INTO `DAT_EoD` (`symbol`, `date`,'
+			cur.execute('INSERT INTO `DAT_EoD` (`symbol`, `date_STR`,'
 				'`open`,`high`,`low`,`close`,`volume`,`adj_close`) VALUES (?,?,?,?,?,?,?,?)', row)
 				
 		f.close()
 		
 		### now update the field `date_UNIX`
 		cur = self.conn.cursor()
-		cur.execute("update DAT_EoD set date_UNIX = strftime('%s', `date`)")
+		cur.execute("update DAT_EoD set date = strftime('%s', `date_STR`)")
 		
 		self.conn.commit()
 		
