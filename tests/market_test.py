@@ -3,7 +3,9 @@ import unittest
 import market
 import yahoo
 import datetime
+from matplotlib import dates as mdates
 
+import pdb
 
 TEST_DB3_FILE = "tests/test.db3"
 TEST_CSV = "tests/test.csv"
@@ -40,9 +42,12 @@ class Symbol(unittest.TestCase):
 		data = self.symbol.get_volumes()
 		self.assertTrue(len(data) > 0)
 		
-	@unittest.skip("No longer makes sense")
 	def test_transform_date(self):
-		pass
+		birthday_str = '1974-09-03'
+		fmt = '%Y-%m-%d'
+		birthday_unixtime = int(datetime.datetime.strptime(birthday_str, fmt).strftime("%s"))
+		birthday_matplotlib = mdates.num2date(self.symbol.transform_date(birthday_unixtime))
+		self.assertEqual(birthday_matplotlib.strftime(fmt), birthday_str)
 
 
 if __name__ == '__main__':
