@@ -7,7 +7,7 @@ log.basicConfig(filename='yahoo.log', level=log.DEBUG) # log to file
 import sqlite3
 import urllib
 import csv
-import datetime as dt
+import datetime
 import os
 import data
 
@@ -15,7 +15,6 @@ import pdb
 
 
 URL_CHECK_EXISTENCE = "https://finance.yahoo.com/q?s={0}"
-URL_CSV_DOWNLOAD = "http://real-chart.finance.yahoo.com/table.csv"
 
 
 class DataError(Exception):
@@ -28,52 +27,160 @@ class DataError(Exception):
 	def __str__(self):
 		return repr(self.value)
 		
+		
 class OnlineSource(data.Source):
 	
 	def __init__(self):
 		
 		super(OnlineSource, self).__init__()
 
-	def query(self, symbol, columns=[], mindate=None, maxdate=None):
-		"""Returns a list of tuples."""
+	def _parsedatestring(self, inputdate):
+		"""Parameters:
 		
-		raise Exception("Not implemented yet")
+			inputdate: a string representing a date in the format '%Y-%m-%d'
+			
+		Returns an integer, representing the number of seconds since Epoch
+		"""
+		
+		datetime_obj = datetime.datetime.strptime(inputdate, '%Y-%m-%d')
+		return int(datetime_obj.strftime('%s'))
 
-	def get_maxdate(self, symbol):
-		"""Returns most recent date available for the given symbol."""
+	def _get_closings(self, symbol_name, mindate=None, maxdate=None):
+		"""Returns: a list of tuple ('date', 'close')
+		"""
 		
-		raise Exception("Not implemented yet")
+		data = []
+		fh = self.download2csv(symbol_name, mindate, maxdate)
+		f = open(fh[0], 'rb')
+		reader = csv.reader(f, delimiter=',')
+		
+		firstRow = True
+		for row in reader:
+			
+			# skip field names row
+			if firstRow:
+				firstRow = False
+				continue
+			
+			#Date,Open,High,Low,Close,Volume,Adj Close
+			data.append(tuple([self._parsedatestring(row[0]), float(row[4])]))
+			
+		f.close()
+		return data
+
+	def _get_volumes(self, symbol_name, mindate=None, maxdate=None):
+		"""Returns: a list of tuple ('date', 'volume')
+		"""
+		
+		data = []
+		fh = self.download2csv(symbol_name, mindate, maxdate)
+		f = open(fh[0], 'rb')
+		reader = csv.reader(f, delimiter=',')
+		
+		firstRow = True
+		for row in reader:
+			
+			# skip field names row
+			if firstRow:
+				firstRow = False
+				continue
+			
+			#Date,Open,High,Low,Close,Volume,Adj Close
+			data.append(tuple([self._parsedatestring(row[0]), float(row[5])]))
+			
+		f.close()
+		return data
+		
+	def _get_ochlv(self, symbol_name, mindate=None, maxdate=None):
+		"""Returns: a list of tuple ('date', 'open', 'close', 'high', 'low')
+		"""
+		
+		data = []
+		fh = self.download2csv(symbol_name, mindate, maxdate)
+		f = open(fh[0], 'rb')
+		reader = csv.reader(f, delimiter=',')
+		
+		firstRow = True
+		for row in reader:
+			
+			# skip field names row
+			if firstRow:
+				firstRow = False
+				continue
+			
+			#Date,Open,High,Low,Close,Volume,Adj Close
+			data.append(tuple([self._parsedatestring(row[0]), 
+				float(row[1]),
+				float(row[2]),
+				float(row[3]),
+				float(row[4]),
+				float(row[5])]))
+			
+		f.close()
+		return data
+
+
+	def get_maxdate(self, symbol_name):
+		"""Get the latest date available for the given symbol.
+		
+		Returns: datetime object
+		"""
+		
+		datelist = []
+		fh = self.download2csv(symbol_name)
+		f = open(fh[0], 'rb')
+		reader = csv.reader(f, delimiter=',')
+		
+		firstRow = True
+		for row in reader:
+			
+			# skip field names row
+			if firstRow:
+				firstRow = False
+				continue
+			
+			#Date,Open,High,Low,Close,Volume,Adj Close
+			datelist.append(row[0])
+			
+		f.close()
+		
+		lastdate = datelist[0] # results are order by date desc
+		datetime_obj = datetime.datetime.strptime(lastdate, '%Y-%m-%d')
+
+		return datetime_obj
+		
 
 	def close(self):
-		"""Just to maintain consistency with LocalSource"""
+		"""Just to stay consistent with LocalSource"""
 		pass
 		
 
-	def download2csv(self, symbol, mindate=None, maxdate=None):
-		"""Download data for given symbol to local CSV file. 
+	def download2csv(self, symbol_name, mindate=None, maxdate=None):
+		"""Download data for given symbol to local CSV file. The CSV
+		file contains field names in the first row.
+		
+		The CSV file contains the following fields:
+		
+			Date,Open,High,Low,Close,Volume,Adj Close
 		
 		Return a tuple (filename, headers) where filename is the local file 
 		name.
 		"""
-		
-		url = URL_CSV_DOWNLOAD + "?s={0}".format(symbol)
-		if maxdate != None:
-			url += "&a={0}&b={1}&c={2}".format(maxdate.month - 1, maxdate.day, maxdate.year)
-		if mindate != None:
-			url += "&d={0}&e={1}&f={2}".format(mindate.month - 1, mindate.day, mindate.year)
-		url += "&g=d" # daily data
-		url += "&ignore=.csv"
-		log.debug(url)
+
+		if not self.exists(symbol_name):
+			raise Exception("Symbol {0} does not exists".format(symbol_name))
+			
+		url = self._get_url(symbol_name, mindate, maxdate, True)
 		return urllib.urlretrieve (url)
 		
 
-	def exists(self, symbol):
+	def exists(self, symbol_name):
 		"""Check if given symbol exists in yahoo database.
 		
 		Return True / False.
 		"""
 		
-		url = URL_CHECK_EXISTENCE.format(symbol)
+		url = URL_CHECK_EXISTENCE.format(symbol_name)
 		response = urllib.urlopen(url)
 		html = response.read()
 		
@@ -110,7 +217,7 @@ class LocalSource(data.Source):
 			raise Exception("Table DAT_EoD not found. Are you sure this is a proper data source ?")
 
 
-	def exists(self, symbol):
+	def exists(self, symbol_name):
 		"""Check if given symbol exists in local EoD table, that is to
 		say that we check if exists at least one row of data for the 
 		given symbol.
@@ -120,7 +227,7 @@ class LocalSource(data.Source):
 		Return True / False.
 		"""
 		
-		sql = "select * from DAT_EoD where symbol = '{0}'".format(symbol)
+		sql = "select * from DAT_EoD where symbol = '{0}'".format(symbol_name)
 		
 		cur = self.conn.cursor()
 		cur.execute (sql)
@@ -131,21 +238,9 @@ class LocalSource(data.Source):
 			return True
 		else:
 			return False
-
-	def _query(self, sql):
-		"""Low level method to execute queries."""
-		
-		log.debug(sql)
-		
-		cur = self.conn.cursor()
-		cur.execute (sql)
-		rows = cur.fetchall()
-		cur.close()
-		
-		return rows
 		
 
-	def query(self, symbol, columns=[], mindate=None, maxdate=None):
+	def _query(self, symbol, columns=[], mindate=None, maxdate=None):
 		"""
 		Parameters:
 		
@@ -178,8 +273,10 @@ class LocalSource(data.Source):
 		if maxdate:
 			sql = sql + " and date_STR >= strftime('%Y-%m-%d', '{0}')".format(maxdate)
 		
-		
-		rows = self._query(sql)
+		cur = self.conn.cursor()
+		cur.execute (sql)
+		rows = cur.fetchall()
+		cur.close()
 	
 		if len(rows) == 0: 
 			raise DataError("No data can be retrieved for the given symbol.")
@@ -207,7 +304,7 @@ class LocalSource(data.Source):
 		maxdate_str = row[0]
 		cur.close()
 		
-		maxdate = dt.datetime.strptime(str(maxdate_str), "%Y-%m-%d")
+		maxdate = datetime.datetime.strptime(str(maxdate_str), "%Y-%m-%d")
 		return maxdate
 		
 		
@@ -229,6 +326,21 @@ class LocalSource(data.Source):
 
 		return symbols
 		
+	def _get_closings(self, symbol_name, mindate=None, maxdate=None):
+		"""Returns: a list of tuple ('date', 'close')
+		"""
+		return self._query(symbol_name, ['date', 'close'], mindate, maxdate)
+
+	def _get_volumes(self, symbol_name, mindate=None, maxdate=None):
+		"""Returns: a list of tuple ('date', 'volume')
+		"""
+		return self._query(symbol_name, ['date', 'volume'], mindate, maxdate)
+		
+	def _get_ochlv(self, symbol_name, mindate=None, maxdate=None):
+		"""Returns: a list of tuple ('date', 'open', 'close', 'high', 'low', 'volume')
+		"""
+		return self._query(symbol_name, ['date', 'open', 'close', 'high', 'low', 'volume'], mindate, maxdate)
+	
 	
 	def refresh(self, symbol):
 		
@@ -297,8 +409,8 @@ class LocalSource(data.Source):
 		
 	
 	def load(self, symbol):
-		"""Download and reload on the database all the data for the 
-		given symbol.
+		"""Download and reload onto the local database all the data for 
+		the given symbol.
 		"""
 		
 		self._delete(symbol)	# clean database

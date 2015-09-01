@@ -1,11 +1,12 @@
 
 import yahoo
-
 import unittest
 import datetime
 import sqlite3
 import os
 import market
+
+import pdb
 
 
 TEST_DB3_FILE = "tests/test.db3"
@@ -32,27 +33,40 @@ class OnlineSource(unittest.TestCase):
 	def tearDown(self):
 		pass
 		
-	@unittest.skip("ToDo")
-	def testquery_001(self):
-		data = self.source.query(ONLINE_TEST_SYMBOL, '2010-01-01', '2011-01-01')
-		self.assertTrue(len(data) > 0)
-
-	@unittest.skip("ToDo")
-	def testquery_002(self):
-		data = symbol.query(ONLINE_TEST_SYMBOL, '2009-01-01', '2010-01-01')
-		self.assertIsInstance(data[0], sqlite3.Row)
+	def test_parsedatestring(self):
+		datetime_obj = datetime.datetime.strptime('1974-09-03', '%Y-%m-%d')
+		unixtime = int(datetime_obj.strftime('%s'))
+		self.assertEqual(self.source._parsedatestring('1974-09-03'), unixtime)
+		
+	def test_get_closings(self):
+		rows = self.source._get_closings(ONLINE_TEST_SYMBOL)
+		self.assertGreater(len(rows), 0)
+		self.assertEqual(len(rows[0]), 2)
+		
+	def test_get_volumes(self):
+		rows = self.source._get_volumes(ONLINE_TEST_SYMBOL)
+		self.assertGreater(len(rows), 0)
+		self.assertEqual(len(rows[0]), 2)
+		
+	def test_get_ochlv(self):
+		rows = self.source._get_ochlv(ONLINE_TEST_SYMBOL)
+		self.assertGreater(len(rows), 0)
+		self.assertEqual(len(rows[0]), 6)
 		
 	def test_exists(self):
 		self.assertTrue(self.source.exists(ONLINE_TEST_SYMBOL))
+
+	def test_exists_not(self):
+		self.assertFalse(self.source.exists('YARGLA.MI'))
 
 	def test_download2csv(self):
 		fh = self.source.download2csv(ONLINE_TEST_SYMBOL)
 		self.assertTrue(os.path.isfile(fh[0]))
 		silentremove(fh[0])
 
-	@unittest.skip("ToDo")
 	def test_get_maxdate(self):
-		pass
+		maxdate = self.source.get_maxdate(ONLINE_TEST_SYMBOL)
+		self.assertIsInstance(maxdate, datetime.datetime)
 
 
 class LocalSource(unittest.TestCase):
@@ -64,7 +78,8 @@ class LocalSource(unittest.TestCase):
 		self.source._load_from_csv(TEST_SYMBOL, TEST_CSV) # load fake prices as symbol `TEST`
 	
 	def tearDown(self):
-				
+		
+		self.source.close()
 		silentremove(TEST_DB3_FILE)
 
 	def test_delete(self):		
@@ -88,20 +103,15 @@ class LocalSource(unittest.TestCase):
 		conn.close()
 
 	def testquery_simple(self):
-		data = self.source.query("TEST")
+		data = self.source._query("TEST")
 		self.assertTrue(len(data) > 0)
 
 	def testquery_wColumns(self):
-		data = self.source.query("TEST", columns=['date', 'volume', 'close'])
+		data = self.source._query("TEST", columns=['date', 'volume', 'close'])
 		self.assertTrue(len(data) > 0)
 
-	@unittest.skip("TODO")
-	def test_initialize(self):
-		pass	
-
-	@unittest.skip("TODO")
 	def test_exists(self):
-		pass
+		self.assertTrue(self.source.exists(TEST_SYMBOL))
 	
 	def test_get_all_symbols(self):
 		symbols = self.source._get_all_symbols()
@@ -111,6 +121,21 @@ class LocalSource(unittest.TestCase):
 		
 		maxdate = self.source.get_maxdate(TEST_SYMBOL)
 		self.assertIsInstance(maxdate, datetime.datetime)
+
+	def test_get_closings(self):
+		rows = self.source._get_closings(TEST_SYMBOL)
+		self.assertGreater(len(rows), 0)
+		self.assertEqual(len(rows[0]), 2)
+		
+	def test_get_volumes(self):
+		rows = self.source._get_volumes(TEST_SYMBOL)
+		self.assertGreater(len(rows), 0)
+		self.assertEqual(len(rows[0]), 2)
+		
+	def test_get_ochlv(self):
+		rows = self.source._get_ochlv(TEST_SYMBOL)
+		self.assertGreater(len(rows), 0)
+		self.assertEqual(len(rows[0]), 6)
 
 	@unittest.skip("Temporarily disabled because too expensive")
 	def test_load_all(self):

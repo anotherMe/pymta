@@ -40,13 +40,9 @@ class Symbol(unittest.TestCase):
 		data = self.symbol.get_volumes()
 		self.assertTrue(len(data) > 0)
 		
+	@unittest.skip("No longer makes sense")
 	def test_transform_date(self):
-		today_unix = int(datetime.datetime.now().strftime("%s"))
-		tdata1 = self.symbol.transform_date(today_unix)
-		self.symbol.matplotlib = True
-		tdata2 = self.symbol.transform_date(today_unix)
-		
-		self.assertNotEqual(tdata2, tdata1)
+		pass
 
 
 if __name__ == '__main__':

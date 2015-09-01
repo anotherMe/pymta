@@ -48,7 +48,6 @@ class Symbol:
 		the price is lower than the day before.
 		"""
 
-
 		closings = self.get_closings()
 		volumes = self.get_volumes()
 		
@@ -92,10 +91,12 @@ class Symbol:
 			
 		"""
 		
-		data = self.source.query(self.name, ['date', 'volume'], self.mindate, self.maxdate)
+		data = self.source._get_volumes(self.name, self.mindate, self.maxdate)
 
-		for idx in range(len(data)):
-			data[idx] = (self.transform_date(data[idx][0]), data[idx][1])
+
+		if self.matplotlib:
+			for idx in range(len(data)):
+				data[idx] = (self.transform_date(data[idx][0]), data[idx][1])
 
 		return data
 		
@@ -108,15 +109,16 @@ class Symbol:
 			
 		"""
 		
-		data = self.source.query(self.name, ['date', 'open', 'close', 'high', 'low'], self.mindate, self.maxdate)
+		data = self.source._get_ochlv(self.name, self.mindate, self.maxdate)
 		
-		for idx in range(len(data)):
-			data[idx] = (self.transform_date(data[idx][0]), # date
-				data[idx][1], # open
-				data[idx][2], # close
-				data[idx][3], # high
-				data[idx][4] # low
-			)
+		if self.matplotlib:
+			for idx in range(len(data)):
+				data[idx] = (self.transform_date(data[idx][0]), # date
+					data[idx][1], # open
+					data[idx][2], # close
+					data[idx][3], # high
+					data[idx][4] # low
+				)
 		
 		return data
 		
@@ -128,10 +130,11 @@ class Symbol:
 			
 		"""
 		
-		data = self.source.query(self.name, ['date', 'close'], self.mindate, self.maxdate)
+		data = self.source._get_closings(self.name, self.mindate, self.maxdate)
 
-		for idx in range(len(data)):
-			data[idx] = (self.transform_date(data[idx][0]), data[idx][1])
+		if self.matplotlib:
+			for idx in range(len(data)):
+				data[idx] = (self.transform_date(data[idx][0]), data[idx][1])
 		
 		return data
 		
@@ -151,13 +154,13 @@ class Symbol:
 		return result
 		
 
-	def transform_date(self, mydate):
-		"""All dates, in order to be processed by Matplotlib, must be
-		transformed in float values.
+	def transform_date(self, inputdate):
+		"""Parameters:
+		
+			inputdate: Unix time - int representing number of seconds from Epoch
+			
+		Returns date in matplotlib date format, that is float number of days since 0001
 		"""
 
-		if self.matplotlib:
-			#~ return mdates.datestr2num(str(mydate))
-			return mdates.epoch2num(mydate)
-		else:
-			return mydate
+		return mdates.epoch2num(inputdate)
+
