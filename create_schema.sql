@@ -15,7 +15,6 @@ CREATE TABLE "DAT_index" (
 
 	`code`	TEXT NOT NULL,
 	`descr`	TEXT,
-	`components_URL`	TEXT,
 	PRIMARY KEY(code)
 );
 CREATE TABLE "DAT_EoD" (

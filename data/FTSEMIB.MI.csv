@@ -1,3 +1,7 @@
+# FTSE MIB
+# symbol = FTSEMIB.MI
+# url = 
+#
 Symbol	Name	Last Trade	Change	Volume
 A2A.MI	A2A S.p.A.	1.0720 11:25AM EDT	Down 0.0520 (4.63%)	21,869,828
 AGL.MI	Autogrill S.p.A.	7.41 11:25AM EDT	Down 0.50 (6.26%)	2,433,479

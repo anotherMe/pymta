@@ -214,7 +214,7 @@ class LocalSource(data.Source):
 		
 		initialize = False
 		if not os.path.isfile(path):
-			log.info("File not exists yet, initializing a new local database.")
+			log.info("Data source not existing yet, initializing a new local database.")
 			initialize = True
 
 		self.conn = sqlite3.connect(path)
@@ -327,7 +327,7 @@ class LocalSource(data.Source):
 		symbols present in the DAT_Symbol table."""
 		
 		cur = self.conn.cursor()
-		cur.execute("select symbol from DAT_symbol order by symbol")
+		cur.execute("select code from DAT_symbol order by code")
 
 		rows = cur.fetchall()
 		cur.close()
@@ -410,7 +410,6 @@ class LocalSource(data.Source):
 		f.close()
 		
 		### now update the field `date_UNIX`
-		cur = self.conn.cursor()
 		cur.execute("update DAT_EoD set date = strftime('%s', `date_STR`)")
 		
 		self.conn.commit()
@@ -439,6 +438,8 @@ class LocalSource(data.Source):
 			
 		"""
 		
+		log.info("Loading index {0}".format(index_name))
+		
 		try:
 
 			cur = self.conn.cursor()
@@ -451,11 +452,11 @@ class LocalSource(data.Source):
 			### load DAT_symbol and DAT_index_symbol table ###
 						
 			f = open(filename, 'rb')
-			reader = csv.reader(f, delimiter='\t')
+			reader = csv.reader(filter(lambda row: row[0]!='#', f), delimiter='\t', )
 
 			firstRow = True
 			for row in reader:
-				
+
 				# skip first row, 
 				if firstRow:
 					firstRow = False
@@ -488,14 +489,16 @@ class LocalSource(data.Source):
 		cur.close()
 		
 	
-	def load(self, symbol):
+	def load(self, symbol_name):
 		"""Download and reload onto the local database all the data for 
 		the given symbol.
 		"""
 		
-		self._delete(symbol)	# clean database
-		filename = OnlineSource().download2csv(symbol)
-		self._load_from_csv(symbol, filename)
+		log.info("Loading data for symbol {0}".format(symbol_name))
+		
+		self._delete(symbol_name)	# clean database
+		filename = OnlineSource().download2csv(symbol_name)
+		self._load_from_csv(symbol_name, filename)
 		
 		
 	def load_all(self):

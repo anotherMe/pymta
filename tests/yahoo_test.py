@@ -11,8 +11,8 @@ import pdb
 
 DB3_FILE = "tests/test.db3"
 CSV_FILE = "tests/test.csv"
-#~ CSV_INDEX_FILE = "tests/index_test.csv"
-CSV_INDEX_FILE = "data/FTSEMIB.MI.csv"
+CSV_INDEX_FILE = "tests/index_test.csv"
+#~ CSV_INDEX_FILE = "data/FTSEMIB.MI.csv"
 TEST_SYMBOL = "TEST"
 ONLINE_TEST_SYMBOL = "ENI.MI" # for testing yahoo online database
 TEST_INDEX_SYMBOL = "^DJI"
