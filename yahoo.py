@@ -13,9 +13,7 @@ import data
 
 import pdb
 
-
 URL_CHECK_EXISTENCE = "https://finance.yahoo.com/q?s={0}"
-
 
 class DataError(Exception):
 	"""Raised when there's no data available for the requested symbol.
@@ -50,8 +48,8 @@ class OnlineSource(data.Source):
 		"""
 		
 		data = []
-		fh = self.download2csv(symbol_name, mindate, maxdate)
-		f = open(fh[0], 'rb')
+		tempfile = self.download2csv(symbol_name, mindate, maxdate)
+		f = open(tempfile, 'rb')
 		reader = csv.reader(f, delimiter=',')
 		
 		firstRow = True
@@ -73,8 +71,8 @@ class OnlineSource(data.Source):
 		"""
 		
 		data = []
-		fh = self.download2csv(symbol_name, mindate, maxdate)
-		f = open(fh[0], 'rb')
+		filename = self.download2csv(symbol_name, mindate, maxdate)
+		f = open(filename, 'rb')
 		reader = csv.reader(f, delimiter=',')
 		
 		firstRow = True
@@ -96,8 +94,8 @@ class OnlineSource(data.Source):
 		"""
 		
 		data = []
-		fh = self.download2csv(symbol_name, mindate, maxdate)
-		f = open(fh[0], 'rb')
+		filename = self.download2csv(symbol_name, mindate, maxdate)
+		f = open(filename, 'rb')
 		reader = csv.reader(f, delimiter=',')
 		
 		firstRow = True
@@ -127,8 +125,8 @@ class OnlineSource(data.Source):
 		"""
 		
 		datelist = []
-		fh = self.download2csv(symbol_name)
-		f = open(fh[0], 'rb')
+		filename = self.download2csv(symbol_name)
+		f = open(filename, 'rb')
 		reader = csv.reader(f, delimiter=',')
 		
 		firstRow = True
@@ -163,15 +161,15 @@ class OnlineSource(data.Source):
 		
 			Date,Open,High,Low,Close,Volume,Adj Close
 		
-		Return a tuple (filename, headers) where filename is the local file 
-		name.
+		Return a filename, pointing to the temporary local file data has
+		been downloaded to.
 		"""
 
 		if not self.exists(symbol_name):
 			raise Exception("Symbol {0} does not exists".format(symbol_name))
 			
 		url = self._get_url(symbol_name, mindate, maxdate, True)
-		return urllib.urlretrieve (url)
+		return urllib.urlretrieve(url)[0]
 		
 
 	def exists(self, symbol_name):
@@ -190,6 +188,20 @@ class OnlineSource(data.Source):
 		else:
 			log.info("Symbol found")
 			return True
+
+
+	def get_index_components(self, index_name):
+		"""Given a Yahoo symbol that points to an index, download a list
+		of all the single stocks ( that is symbols ) that compose the
+		index.
+		
+		Parameters:
+		
+			index_name :: a string for the Yahoo symbol of the index
+			
+		Returns a list of symbol names.
+		"""
+		pass
 
 
 class LocalSource(data.Source):
@@ -371,7 +383,12 @@ class LocalSource(data.Source):
 			self.refresh(symbol)
 		
 		
-	def _load_from_csv(self, symbol, filename):
+	def _load_from_csv(self, symbol_name, filename):
+		"""Load EoD data of given symbol from the CSV file.
+		
+		Usually, the CSV you load the data from is the one that you 
+		create using yahoo.OnlineSource.download2csv method.
+		"""
 		
 		f = open(filename, 'rb')
 		reader = csv.reader(f, delimiter=',')
@@ -386,7 +403,7 @@ class LocalSource(data.Source):
 				firstRow = False
 				continue
 			
-			row.insert(0, symbol) # insert symbol
+			row.insert(0, symbol_name) # insert symbol
 			cur.execute('INSERT INTO `DAT_EoD` (`symbol`, `date_STR`,'
 				'`open`,`high`,`low`,`close`,`volume`,`adj_close`) VALUES (?,?,?,?,?,?,?,?)', row)
 				
@@ -395,6 +412,69 @@ class LocalSource(data.Source):
 		### now update the field `date_UNIX`
 		cur = self.conn.cursor()
 		cur.execute("update DAT_EoD set date = strftime('%s', `date_STR`)")
+		
+		self.conn.commit()
+		
+		
+	def _load_index_from_csv(self, index_name, filename, index_descr=None):
+		"""Given a CSV file, containing a list of all the symbols compo_
+		sing an index, populates all the related table in the database.
+		
+		The CSV file is supposed to be UTF-8 encoded.
+		
+		The CSV file, with tab separated data, should at leas contain two
+		columns: the first one being the Yahoo symbol and the second a
+		description of the symbol.
+		
+		For the time being, you have to manually create the CSV. My 
+		suggestion is to make some copying&pasting from a page like this 
+		one:
+		
+			http://finance.yahoo.com/q/cp?s=^DJI+Components
+		
+		Parameters:
+			
+			<index_name> :: the name of the index ( ie: a Yahoo symbol )
+			<index_descr> :: an optional short text describing the index
+			
+		"""
+		
+		try:
+
+			cur = self.conn.cursor()
+			
+			### insert a new record in DAT_index table ###
+
+			cur.execute("insert into DAT_index (`code`, `descr`)"
+				" values ('{0}', '{1}')".format(index_name, index_descr))
+			
+			### load DAT_symbol and DAT_index_symbol table ###
+						
+			f = open(filename, 'rb')
+			reader = csv.reader(f, delimiter='\t')
+
+			firstRow = True
+			for row in reader:
+				
+				# skip first row, 
+				if firstRow:
+					firstRow = False
+					continue
+				
+				log.debug(row)
+				
+				# symbol may be already present, no error in that case
+				cur.execute('INSERT OR IGNORE INTO `DAT_symbol` (`code`, `descr`) '
+					'VALUES (?,?)', [row[0], row[1].decode('utf-8')])
+
+				cur.execute('INSERT INTO DAT_index_symbol ( `index`, `symbol`) '
+					'VALUES (?,?)', [index_name, row[0]])
+					
+			f.close()
+			
+		except Exception, ex:
+			self.conn.rollback()
+			raise Exception(ex)
 		
 		self.conn.commit()
 		
@@ -414,8 +494,8 @@ class LocalSource(data.Source):
 		"""
 		
 		self._delete(symbol)	# clean database
-		fh = OnlineSource().download2csv(symbol)
-		self._load_from_csv(symbol, fh[0])
+		filename = OnlineSource().download2csv(symbol)
+		self._load_from_csv(symbol, filename)
 		
 		
 	def load_all(self):
@@ -445,3 +525,5 @@ class LocalSource(data.Source):
 			
 			log.error("Cannot truncate table DAT_EoD")
 			log.error(ex)
+
+		

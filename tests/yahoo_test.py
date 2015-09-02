@@ -9,11 +9,15 @@ import market
 import pdb
 
 
-TEST_DB3_FILE = "tests/test.db3"
-TEST_CSV = "tests/test.csv"
+DB3_FILE = "tests/test.db3"
+CSV_FILE = "tests/test.csv"
+#~ CSV_INDEX_FILE = "tests/index_test.csv"
+CSV_INDEX_FILE = "data/FTSEMIB.MI.csv"
 TEST_SYMBOL = "TEST"
 ONLINE_TEST_SYMBOL = "ENI.MI" # for testing yahoo online database
-
+TEST_INDEX_SYMBOL = "^DJI"
+COMPONENTS_NUM = 30 # total number of components for the DJ index
+URL_INDEX_COMPONENTS = "http://finance.yahoo.com/q/cp?"
 
 
 def silentremove(filename):
@@ -60,9 +64,9 @@ class OnlineSource(unittest.TestCase):
 		self.assertFalse(self.source.exists('YARGLA.MI'))
 
 	def test_download2csv(self):
-		fh = self.source.download2csv(ONLINE_TEST_SYMBOL)
-		self.assertTrue(os.path.isfile(fh[0]))
-		silentremove(fh[0])
+		filename = self.source.download2csv(ONLINE_TEST_SYMBOL)
+		self.assertTrue(os.path.isfile(filename))
+		silentremove(filename)
 
 	def test_get_maxdate(self):
 		maxdate = self.source.get_maxdate(ONLINE_TEST_SYMBOL)
@@ -73,20 +77,20 @@ class LocalSource(unittest.TestCase):
 
 	def setUp(self):
 		
-		silentremove(TEST_DB3_FILE)
-		self.source = yahoo.LocalSource(TEST_DB3_FILE)
-		self.source._load_from_csv(TEST_SYMBOL, TEST_CSV) # load fake prices as symbol `TEST`
+		silentremove(DB3_FILE)
+		self.source = yahoo.LocalSource(DB3_FILE)
+		self.source._load_from_csv(TEST_SYMBOL, CSV_FILE) # load fake prices as symbol `TEST`
 	
 	def tearDown(self):
 		
 		self.source.close()
-		silentremove(TEST_DB3_FILE)
+		silentremove(DB3_FILE)
 
 	def test_delete(self):		
 		
 		self.source._delete(TEST_SYMBOL)
 		
-		conn = sqlite3.connect(TEST_DB3_FILE)
+		conn = sqlite3.connect(DB3_FILE)
 		cur = conn.cursor()
 		cur.execute("select count(*) from DAT_EoD")
 		rowcount = cur.fetchone()
@@ -95,7 +99,7 @@ class LocalSource(unittest.TestCase):
 		
 	def test_load(self):
 		
-		conn = sqlite3.connect(TEST_DB3_FILE)
+		conn = sqlite3.connect(DB3_FILE)
 		cur = conn.cursor()
 		cur.execute("select count(*) from DAT_EoD where symbol = '{0}'".format(TEST_SYMBOL))
 		rowcount = cur.fetchone()
@@ -148,13 +152,37 @@ class LocalSource(unittest.TestCase):
 
 	def test_load_from_csv(self):
 		
-		self.source._load_from_csv("LOADTEST", TEST_CSV)
-		conn = sqlite3.connect(TEST_DB3_FILE)
+		self.source._load_from_csv("LOADTEST", CSV_FILE)
+		conn = sqlite3.connect(DB3_FILE)
 		cur = conn.cursor()
 		cur.execute("select count(*) from DAT_EoD where symbol = '{0}'".format("LOADTEST"))
 		rowcount = cur.fetchone()
 		conn.close()
 		self.assertTrue(rowcount[0] > 0)
+		
+	def test_load_index_from_csv(self):
+		
+		self.source._load_index_from_csv("TEST_INDEX", CSV_INDEX_FILE, None)
+		
+		conn = sqlite3.connect(DB3_FILE)
+
+		cur = conn.cursor()
+		cur.execute("select count(*) from DAT_index")
+		count_DAT_index = cur.fetchone()[0]
+
+		cur = conn.cursor()
+		cur.execute("select count(*) from DAT_index_symbol where `index` = '{0}'".format("TEST_INDEX"))
+		count_DAT_index_symbol = cur.fetchone()[0]
+
+		cur = conn.cursor()
+		cur.execute("select count(*) from DAT_symbol")
+		count_DAT_symbol = cur.fetchone()[0]
+
+		conn.close()
+		
+		self.assertEqual(count_DAT_index, 1)
+		self.assertGreater(count_DAT_index_symbol, 0)
+		self.assertGreater(count_DAT_symbol, 0)
 		
 
 	@unittest.skip("ToDo")
@@ -166,7 +194,7 @@ class LocalSource(unittest.TestCase):
 		
 		self.source.refresh(ONLINE_TEST_SYMBOL)
 		
-		conn = sqlite3.connect(TEST_DB3_FILE)
+		conn = sqlite3.connect(DB3_FILE)
 		cur = conn.cursor()		
 		cur.execute("select date_STR from DAT_EoD where symbol = '{0}'"
 			" order by date_STR desc limit 1".format(ONLINE_TEST_SYMBOL))
@@ -179,8 +207,8 @@ class LocalSource(unittest.TestCase):
 		delta = today - maxdate
 		self.assertTrue(delta.days < 3) # 3 days, because of weekends
 		
-			
-			
+
+
 
 if __name__ == '__main__':
 	
