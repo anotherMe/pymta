@@ -34,10 +34,10 @@ class DB:
 		sql += " from DAT_EoD where symbol = '{1}'".format(column, symbol)
 		
 		if lowerBound:
-			sql = sql + " and date >= strftime('%Y-%m-%d', '{0}')".format(lowerBound)
+			sql = sql + " and date_STR >= strftime('%Y-%m-%d', '{0}')".format(lowerBound)
 		
 		if higherBound:
-			sql = sql + " and date >= strftime('%Y-%m-%d', '{0}')".format(higherBound)
+			sql = sql + " and date_STR >= strftime('%Y-%m-%d', '{0}')".format(higherBound)
 		
 		#self.conn.row_factory = sqlite3.Row
 		#~ self.conn.row_factory = self.dict_factory 

@@ -4,7 +4,7 @@ var margin = {top: 20, right: 20, bottom: 30, left: 50},
 		height = 500 - margin.top - margin.bottom;
 
 //~ var parseDate = d3.time.format("%d-%b-%y").parse;
-var parseDate = d3.time.format("%Y-%m-%d").parse;
+//~ var parseDate = d3.time.format("%Y-%m-%d").parse;
 
 var x = techan.scale.financetime()
 		.range([0, width]);
@@ -31,10 +31,10 @@ var svg = d3.select("body").append("svg")
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 
-//~ d3.csv("/static/data/techan001.csv", function(error, data) {
-//~ d3.json("/get_data/ENI/", function(error, data) {
 //~ var data_url = "/get_data/" + req_symbol + "/";
 var data_url = "/get_data/" + req_symbol + "/" + req_mindate + "/" ;
+//~ d3.csv("/static/data/techan001.csv", function(error, data) {
+//~ d3.json("/get_data/ENI/", function(error, data) {
 d3.json(data_url, function(error, data) {
 
 	var accessor = candlestick.accessor(),
@@ -43,7 +43,8 @@ d3.json(data_url, function(error, data) {
 	//~ data = data.slice(0, 200).map(function(d) {
 	data = data.map(function(d) {
 		return {
-			date: parseDate(d.date),
+			//~ date: parseDate(d.date),
+			date: new Date(d.date*1000),
 			open: +d.open,
 			high: +d.high,
 			low: +d.low,

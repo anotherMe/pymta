@@ -1,3 +1,5 @@
+#!/usr/bin/python2
+
 
 import flask as f
 app = f.Flask(__name__)
@@ -8,7 +10,15 @@ import pdb
 
 
 from database import DB
-DATABASE = '/home/marco/lab/python/yahoo.db3'
+DATABASE = '/home/marco/lab/pymta/yahoo.db3'
+
+
+
+# Add a custom static data ( apart from the default "static" folder )
+@app.route('/bower_components/<path:filename>')
+def custom_static(filename):
+    #~ return send_from_directory(app.config['CUSTOM_STATIC_PATH'], filename)
+    return f.send_from_directory('bower_components', filename)
 
 
 
@@ -18,7 +28,6 @@ def get_db():
 	if db is None:
 		db = f.g._database = DB(DATABASE)
 	return db
-
 
 @app.teardown_appcontext
 def close_connection(exception):
