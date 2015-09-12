@@ -34,11 +34,11 @@ class Source(object):
 		
 		url = URL_CSV_DOWNLOAD + "?s={0}".format(symbol_name)
 		
-		if maxdate != None:
-			url += "&a={0}&b={1}&c={2}".format(maxdate.month - 1, maxdate.day, maxdate.year)
-			
 		if mindate != None:
-			url += "&d={0}&e={1}&f={2}".format(mindate.month - 1, mindate.day, mindate.year)
+			url += "&a={0}&b={1}&c={2}".format(mindate.month - 1, mindate.day, mindate.year)
+			
+		if maxdate != None:
+			url += "&d={0}&e={1}&f={2}".format(maxdate.month - 1, maxdate.day, maxdate.year)
 			
 		url += "&g=d" # daily data
 		url += "&ignore=.csv"

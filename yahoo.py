@@ -2,7 +2,7 @@
 
 import logging as log
 log.basicConfig(filename='yahoo.log', level=log.DEBUG) # log to file
-#~ log.getLogger().addHandler(log.StreamHandler()) # log to stderr too
+log.getLogger().addHandler(log.StreamHandler()) # log to stderr too
 
 import sqlite3
 import urllib
@@ -183,10 +183,10 @@ class OnlineSource(data.Source):
 		html = response.read()
 		
 		if "There are no results for the given search term" in html:
-			log.info("Symbol not found")
+			log.info("Symbol {0} not found in local database".format(symbol_name))
 			return False
 		else:
-			log.info("Symbol found")
+			log.info("Symbol {0} found in local database".format(symbol_name))
 			return True
 
 
@@ -303,7 +303,7 @@ class LocalSource(data.Source):
 	def get_maxdate(self, symbol_name):
 		"""Get the most recent date available for the given symbol.
 		
-		Returns a datetime object.
+		Returns: a datetime object.
 		"""
 		
 		# FIXME: use `date` field instead of `date_STR`
@@ -317,7 +317,7 @@ class LocalSource(data.Source):
 		cur.close()
 		
 		maxdate = datetime.datetime.strptime(str(maxdate_str), "%Y-%m-%d")
-		return maxdate
+		return maxdate		
 		
 		
 	def _get_all_symbols(self):
@@ -354,25 +354,27 @@ class LocalSource(data.Source):
 		return self._query(symbol_name, ['date', 'open', 'close', 'high', 'low', 'volume'], mindate, maxdate)
 	
 	
-	def refresh(self, symbol):
+	def refresh(self, symbol_name):
 		
-		log.info("Refreshing symbol <{0}>".format(symbol))
+		log.info("Refreshing symbol <{0}>".format(symbol_name))
 		
-		# if symbol not exists, download all data and exit
-		if not self.exists(symbol):
-			self.load(symbol)
+		# check if symbol exists
+		if not self.exists(symbol_name):
+			raise Exception("Given symbol does not exist.")
 		
+		maxdate = self.get_maxdate(symbol_name)
+		log.info("Max date available: {0}".format(maxdate.strftime("%Y-%m-%d")))
 		
 		# check if it's up to date
-		maxdate = self.get_maxdate(symbol)		
-		delta = dt.datetime.today() - maxdate
-		
+		delta = datetime.datetime.today() - maxdate
 		if delta.days <= 2:
 			return
 			
-		maxdate = maxdate + dt.timedelta(days=1) # start downloading from the next day
-		fh = self._download(symbol, maxdate=maxdate)
-		self._load(symbol, fh[0])
+		maxdate = maxdate + datetime.timedelta(days=1) # start downloading from the next day
+		log.info("Computed max date: {0}".format(maxdate.strftime("%Y-%m-%d")))
+		
+		filename = OnlineSource().download2csv(symbol_name, mindate=maxdate)
+		self._load_from_csv(symbol_name, filename)
 		
 		
 	def refresh_all(self):
@@ -499,7 +501,6 @@ class LocalSource(data.Source):
 		self._delete(symbol_name)	# clean database
 		filename = OnlineSource().download2csv(symbol_name)
 		self._load_from_csv(symbol_name, filename)
-		
 		
 	def load_all(self):
 		"""Load all historical prices for symbols included in table 
