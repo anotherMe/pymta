@@ -368,6 +368,7 @@ class LocalSource(data.Source):
 		# check if it's up to date
 		delta = datetime.datetime.today() - maxdate
 		if delta.days <= 2:
+			log.info("Already up to date, skipping symbol.")
 			return
 			
 		maxdate = maxdate + datetime.timedelta(days=1) # start downloading from the next day
@@ -380,9 +381,13 @@ class LocalSource(data.Source):
 	def refresh_all(self):
 		
 		symbols = self._get_all_symbols()
+		log.info("Found {0} total symbols in database".format(len(symbols)))
 		
+		counter = 1
 		for symbol in symbols:
+			log.info("Refreshing symbol {0}/{1}".format(counter, len(symbols)))
 			self.refresh(symbol)
+			counter += 1
 		
 		
 	def _load_from_csv(self, symbol_name, filename):
@@ -507,9 +512,36 @@ class LocalSource(data.Source):
 		DAT_symbol."""
 		
 		symbols = self._get_all_symbols()
-		for symbol in symbols:
-			self.load(symbol)
+		log.info("Found {0} total symbols in database".format(len(symbols)))
 		
+		counter = 1
+		for symbol in symbols:
+			log.info("Loading symbol {0}/{1}".format(counter, len(symbols)))
+			self.load(symbol)
+			counter += 1
+		
+
+	def load_all_from_index(self, index_name):
+		"""Table DAT_index_symbol links an index with many symbols.
+		
+		Given and index, this method loads all the linked symbols.
+		"""
+		
+		cur = self.conn.cursor()
+		cur.execute("select is.symbol from DAT_index i "
+			"inner join DAT_index_symbol is on is.index = i.code "
+			"where i.code = ?", index_name)
+
+		rows = cur.fetchall()
+		log.info("Found {0} total symbols in given index".format(len(rows)))
+		cur.close()
+		
+		counter = 1
+		for row in rows:
+			log.info("Loading symbol {0}/{1}".format(counter, len(rows)))
+			self.load(row[0])
+			counter += 1
+
 
 	def _delete(self, symbol):
 	
