@@ -153,11 +153,13 @@ class LocalSource(unittest.TestCase):
 	@unittest.skip("Temporarily disabled because too expensive")
 	def test_load_all_from_index(self):
 		
-		self.source._load_index_from_csv('TEST_INDEX', 
-		self.source.load_all()
-		symbols = self.source._get_all_symbols()
-		loaded_symbols = self.source._query("select symbol from DAT_EoD group by symbol")
-		self.assertEqual(len(symbols), len(loaded_symbols))
+		self.source._delete(TEST_SYMBOL)
+		symbols_start = self.source._get_all_symbols()
+		self.source._load_index_from_csv('TEST_INDEX', CSV_INDEX_FILE) # load indexex table
+		self.source.load_all_from_index('TEST_INDEX') # load symbols for the given index
+		symbols_end = self.source._get_all_symbols()
+		self.assertEqual(len(symbols_start), 0)
+		self.assertGreater(len(symbols_start), len(symbols_start))
 
 	def test_load_from_csv(self):
 		

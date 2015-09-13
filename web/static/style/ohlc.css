@@ -1,6 +1,6 @@
 
 body {
-	font: 10px sans-serif;
+	padding-top: 50px;
 }
 
 .axis path,
@@ -21,4 +21,9 @@ path.ohlc.up {
 
 path.ohlc.down {
 	stroke: #FF0000;
+}
+
+.starter-template {
+  padding: 40px 15px;
+  text-align: center;
 }
