@@ -55,6 +55,7 @@ function refreshChart(model, event) {
 		data_url += "/" + model.maxdate();
 	}
 	
+	
 	d3.json(data_url, function(error, data) {
 	
 		if (error) {
