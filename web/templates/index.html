@@ -52,10 +52,12 @@
 		</div>
 
 		<div class="row">
+
 			<div class="col-md-3">
-				<input type="text" class="form-control" placeholder="Enter Yahoo symbol here" 
-					aria-describedby="symbol" data-bind="value: symbol">
+					<input type="text" class="form-control" placeholder="Enter Yahoo symbol here" 
+						aria-describedby="symbol" data-bind="value: symbol" />
 			</div>
+			
 			<div class="col-md-4">
 				<div class="input-group date">
 					<input id="mindate" type="text" class="form-control" 
@@ -71,16 +73,15 @@
 					<span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
 				</div>
 			</div>
+					
 			
 			<div class="col-md-1">
 				<button type="button" class="btn btn-primary" data-bind="click: refreshChart">Plot</button>
 			</div>
-						
-			
-			
+					
 		</div>
-
-		<div class="row">
+		
+		<div class="row spacer-top">
 			<div class="col-md-12">
 				<!-- D3js is going to plot in the following div -->
 				<div id="svg_container"></div>
@@ -98,20 +99,15 @@
 	<script src="/bower_components/TechanJS/dist/techan.min.js"></script>
 	<script src="/bower_components/toastr/toastr.min.js"></script>
 
+	<script src="/static/js/plot.js"></script>
+
 	<script>
-		
-		/* flask data binding */
-		var req_symbol = '{{ symbol }}';
-		var req_mindate = '{{ mindate }}';
-		var req_maxdate = '{{ maxdate }}';
-		
+
 		$(document).ready(function() {
 			run()
 		});
 		
 	</script>
-
-	<script src="/static/js/plot.js"></script>
 
   </body>
 </html>

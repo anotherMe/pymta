@@ -36,15 +36,23 @@ def close_connection(exception):
         db.dispose()
         
 
-@app.route('/get_data/<symbol>/')
-@app.route('/get_data/<symbol>/<mindate>/')
-@app.route('/get_data/<symbol>/<mindate>/<maxdate>/')
-def get_data(symbol, mindate=None, maxdate=None):
+@app.route('/get_eod/<symbol>/')
+@app.route('/get_eod/<symbol>/<mindate>/')
+@app.route('/get_eod/<symbol>/<mindate>/<maxdate>/')
+def get_eod(symbol, mindate=None, maxdate=None):
 
 	db = get_db()
-	rows = db.select_rows(symbol, ["date", "open", "high", "low", "close", "volume"], mindate, maxdate)
+	rows = db.get_eod(symbol, mindate, maxdate)
 	return json.dumps(rows)
-	
+
+
+@app.route('/symbol/search/<search_string>/')
+def symbol_search(search_string):
+
+	db = get_db()
+	rows = db.search_symbol(search_string)
+	return json.dumps(rows)
+
 
 @app.route('/')
 def default():

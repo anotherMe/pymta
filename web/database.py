@@ -22,8 +22,9 @@ class DB:
 		return my_list
 
 
-	def select_rows(self, symbol, columns, lowerBound=None, higherBound=None):
+	def get_eod(self, symbol, lowerBound=None, higherBound=None):
 
+		columns = ["date", "open", "high", "low", "close", "volume"]
 		sql = "select "
 		firstLoop = True
 		for column in columns:
@@ -41,6 +42,18 @@ class DB:
 		
 		#self.conn.row_factory = sqlite3.Row
 		#~ self.conn.row_factory = self.dict_factory 
+		
+		cur = self.conn.cursor()
+		cur.execute (sql)
+		rows = cur.fetchall()
+
+		return self.get_list_from(cur, rows)
+
+		
+	def search_symbol(self, search_symbol):
+
+		sql = "select code from DAT_symbol "
+		sql += "where code like '{0}%' limit 5".format(search_symbol)
 		
 		cur = self.conn.cursor()
 		cur.execute (sql)

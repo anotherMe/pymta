@@ -1,5 +1,7 @@
 
 
+var DATA_URL = "/get_eod/";
+
 var svg; // D3 SVG container
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -40,7 +42,7 @@ function refreshChart(model, event) {
 		return;
 	}
 	
-	var data_url = "/get_data/" + model.symbol().toUpperCase();
+	var data_url = DATA_URL + model.symbol().toUpperCase();
 	
 	if (model.mindate() != undefined && model.mindate().trim() != '') {
 		data_url += "/" + model.mindate();
@@ -121,6 +123,7 @@ function run() {
 	/* apply KO bindings */
 	
 	ko.applyBindings(new PageModel());
+	
 	
 }
 
