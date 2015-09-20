@@ -64,7 +64,7 @@ if __name__=='__main__':
 	
 	app = MainApp(args.source)
 	
-	if args.symbol && args.index:
+	if (args.symbol == None and args.index == None):
 		print "You cannot specify a symbol and an index at the same time."
 		sys.exit(0)
 
