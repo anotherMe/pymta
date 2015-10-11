@@ -1,19 +1,63 @@
 #!/usr/bin/env python2
 
-import logging as log
-log.basicConfig(filename='yahoo.log', level=log.DEBUG) # log to file
-log.getLogger().addHandler(log.StreamHandler()) # log to stderr too
+import logging
 
 import sqlite3
 import urllib
 import csv
 import datetime
 import os
-import data
 
 import pdb
 
 URL_CHECK_EXISTENCE = "https://finance.yahoo.com/q?s={0}"
+URL_CSV_DOWNLOAD = "http://real-chart.finance.yahoo.com/table.csv"
+
+
+class Source(object):
+	"""Not to be instantiated explicitly. This class is just an interface
+	all the data sources should adhere.
+	"""
+
+	def __init__(self):
+		logging.basicConfig(filename='yahoo.log', level=logging.DEBUG) # log to file
+		#logging.getLogger().addHandler(self.logger.StreamHandler()) # log to stderr too
+		self.logger = logging.getLogger(__name__)
+		
+	def _get_closings(self):
+		raise Exception("Not implemented yet")
+
+	def _get_volumes(self):
+		raise Exception("Not implemented yet")
+
+	def _get_ochlv(self):
+		raise Exception("Not implemented yet")
+		
+	def _get_url(self, symbol_name, mindate=None, maxdate=None, historical=True):
+		"""Build the URL needed to download data from Yahoo Finance 
+		site.
+		
+		Parameter:
+		
+			symbol_name: symbol name, according to Yahoo convention (ie: SPM.MI)
+			mindate: string representing date in the format '%Y-%m-%d'
+			maxdate: string representing date in the format '%Y-%m-%d'
+			historical: query Yahoo historical data ( at the moment we know about this only type of data)
+		"""
+		
+		url = URL_CSV_DOWNLOAD + "?s={0}".format(symbol_name)
+		
+		if mindate != None:
+			url += "&a={0}&b={1}&c={2}".format(mindate.month - 1, mindate.day, mindate.year)
+			
+		if maxdate != None:
+			url += "&d={0}&e={1}&f={2}".format(maxdate.month - 1, maxdate.day, maxdate.year)
+			
+		url += "&g=d" # daily data
+		url += "&ignore=.csv"
+
+		return url
+
 
 class DataError(Exception):
 	"""Raised when there's no data available for the requested symbol.
@@ -26,7 +70,7 @@ class DataError(Exception):
 		return repr(self.value)
 		
 		
-class OnlineSource(data.Source):
+class OnlineSource(Source):
 	
 	def __init__(self):
 		
@@ -183,10 +227,10 @@ class OnlineSource(data.Source):
 		html = response.read()
 		
 		if "There are no results for the given search term" in html:
-			log.info("Symbol {0} not found in local database".format(symbol_name))
+			self.logger.info("Symbol {0} not found in local database".format(symbol_name))
 			return False
 		else:
-			log.info("Symbol {0} found in local database".format(symbol_name))
+			self.logger.info("Symbol {0} found in local database".format(symbol_name))
 			return True
 
 
@@ -204,7 +248,7 @@ class OnlineSource(data.Source):
 		pass
 
 
-class LocalSource(data.Source):
+class LocalSource(Source):
 	
 	def __init__(self, path):
 		"""Open database if it already exists; initialize a new one
@@ -214,7 +258,7 @@ class LocalSource(data.Source):
 		
 		initialize = False
 		if not os.path.isfile(path):
-			log.info("Data source not existing yet, initializing a new local database.")
+			self.logger.info("Data source not existing yet, initializing a new local database.")
 			initialize = True
 
 		self.conn = sqlite3.connect(path)
@@ -356,23 +400,23 @@ class LocalSource(data.Source):
 	
 	def refresh(self, symbol_name):
 		
-		log.info("Refreshing symbol <{0}>".format(symbol_name))
+		self.logger.info("Refreshing symbol <{0}>".format(symbol_name))
 		
 		# check if symbol exists
 		if not self.exists(symbol_name):
 			raise Exception("Given symbol does not exist.")
 		
 		maxdate = self.get_maxdate(symbol_name)
-		log.info("Max date available: {0}".format(maxdate.strftime("%Y-%m-%d")))
+		self.logger.info("Max date available: {0}".format(maxdate.strftime("%Y-%m-%d")))
 		
 		# check if it's up to date
 		delta = datetime.datetime.today() - maxdate
 		if delta.days <= 2:
-			log.info("Already up to date, skipping symbol.")
+			self.logger.info("Already up to date, skipping symbol.")
 			return
 			
 		maxdate = maxdate + datetime.timedelta(days=1) # start downloading from the next day
-		log.info("Computed max date: {0}".format(maxdate.strftime("%Y-%m-%d")))
+		self.logger.info("Computed max date: {0}".format(maxdate.strftime("%Y-%m-%d")))
 		
 		filename = OnlineSource().download2csv(symbol_name, mindate=maxdate)
 		self._load_from_csv(symbol_name, filename)
@@ -381,11 +425,11 @@ class LocalSource(data.Source):
 	def refresh_all(self):
 		
 		symbols = self._get_all_symbols()
-		log.info("Found {0} total symbols in database".format(len(symbols)))
+		self.logger.info("Found {0} total symbols in database".format(len(symbols)))
 		
 		counter = 1
 		for symbol in symbols:
-			log.info("Refreshing symbol {0}/{1}".format(counter, len(symbols)))
+			self.logger.info("Refreshing symbol {0}/{1}".format(counter, len(symbols)))
 			self.refresh(symbol)
 			counter += 1
 		
@@ -445,7 +489,7 @@ class LocalSource(data.Source):
 			
 		"""
 		
-		log.info("Loading index {0}".format(index_name))
+		self.logger.info("Loading index {0}".format(index_name))
 		
 		try:
 
@@ -469,7 +513,7 @@ class LocalSource(data.Source):
 					firstRow = False
 					continue
 				
-				log.debug(row)
+				self.logger.debug(row)
 				
 				# symbol may be already present, no error in that case
 				cur.execute('INSERT OR IGNORE INTO `DAT_symbol` (`code`, `descr`) '
@@ -501,22 +545,23 @@ class LocalSource(data.Source):
 		the given symbol.
 		"""
 		
-		log.info("Loading data for symbol {0}".format(symbol_name))
+		self.logger.info("Loading data for symbol {0}".format(symbol_name))
 		
 		self._delete(symbol_name)	# clean database
 		filename = OnlineSource().download2csv(symbol_name)
 		self._load_from_csv(symbol_name, filename)
+		
 		
 	def load_all(self):
 		"""Load all historical prices for symbols included in table 
 		DAT_symbol."""
 		
 		symbols = self._get_all_symbols()
-		log.info("Found {0} total symbols in database".format(len(symbols)))
+		self.logger.info("Found {0} total symbols in database".format(len(symbols)))
 		
 		counter = 1
 		for symbol in symbols:
-			log.info("Loading symbol {0}/{1}".format(counter, len(symbols)))
+			self.logger.info("Loading symbol {0}/{1}".format(counter, len(symbols)))
 			self.load(symbol)
 			counter += 1
 		
@@ -533,12 +578,12 @@ class LocalSource(data.Source):
 			"where i.code = ?", index_name)
 
 		rows = cur.fetchall()
-		log.info("Found {0} total symbols in given index".format(len(rows)))
+		self.logger.info("Found {0} total symbols in given index".format(len(rows)))
 		cur.close()
 		
 		counter = 1
 		for row in rows:
-			log.info("Loading symbol {0}/{1}".format(counter, len(rows)))
+			self.logger.info("Loading symbol {0}/{1}".format(counter, len(rows)))
 			self.load(row[0])
 			counter += 1
 
@@ -559,7 +604,7 @@ class LocalSource(data.Source):
 			
 		except Exception, ex:
 			
-			log.error("Cannot truncate table DAT_EoD")
-			log.error(ex)
+			self.logger.error("Cannot truncate table DAT_EoD")
+			self.logger.error(ex)
 
 		

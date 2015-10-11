@@ -5,8 +5,6 @@ from plotting import Plotter
 import market
 import argparse
 
-# FIXME: the datasource should be a parameter too
-LOCAL_DATASOURCE = "yahoo.db3"
 
 
 if __name__=='__main__':
@@ -14,10 +12,11 @@ if __name__=='__main__':
 
 	## argument parsing ##
 
-	parser = argparse.ArgumentParser(description='Process some integers.')
-	parser.add_argument('--symbol', required=True,
+	parser = argparse.ArgumentParser()
+	parser.add_argument('source', help='path to the LocalSource database')
+	parser.add_argument('-s', '--symbol', required=True,
 		help='the symbol to plot, according to yahoo convention (ie: SPM.MI)')
-	parser.add_argument('--type', help='Type of plot requested.',
+	parser.add_argument('-t', '--type', help='Type of plot requested.',
 		choices=['simple', 'candle', 'volume', 'obv', 'ma', 'mac'],
 		default='simple'
 	)
