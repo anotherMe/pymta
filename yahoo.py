@@ -363,7 +363,25 @@ class LocalSource(Source):
 		maxdate = datetime.datetime.strptime(str(maxdate_str), "%Y-%m-%d")
 		return maxdate		
 		
+	def _get_all_loaded_symbols(self):
+		"""Return all the symbols present in the local database, with
+		related most recent date.
 		
+		These are not the symbols for which we have data, just the 
+		symbols present in the DAT_Symbol table."""
+		
+		cur = self.conn.cursor()
+		cur.execute("select symbol, strftime('%Y-%m-%d', max(date)) as maxDate from DAT_EoD group by symbol order by symbol")
+
+		rows = cur.fetchall()
+		cur.close()
+		
+		symbols = []
+		for row in rows:
+			symbols.append([row[0], row[1]])
+
+		return symbols
+			
 	def _get_all_symbols(self):
 		"""Return all the symbols present in the local database.
 		

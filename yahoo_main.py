@@ -6,49 +6,99 @@
 import argparse
 import yahoo
 import sys
+import os
 
 class MainApp:
 	
 	def __init__(self, path):
 		
 		self.source = yahoo.LocalSource(path)
-		#~ source._load_index_from_csv("FTSEMIB.MI", "data/FTSEMIB.MI.csv", "FTSE MIB")
-		#~ source._load_index_from_csv("^DJI", "data/DJIA.csv", "Dow Jones Industrial Average")
-		#~ source.refresh_all()
-		#~ source.refresh('BA')
-		sym = self.source._get_all_symbols()
-		print "Got {0} symbols in database (table DAT_symbol)".format(len(sym))
+		#~ sym = self.source._get_all_symbols()
+		#~ print "Got {0} symbols in database (table DAT_symbol)".format(len(sym))
+		self.mainPage()
 
-	def info(self, symbol):
-		
-		raise Exception("Not implemented yet")
+	def log(self, severity, msg):
+		print("{0} - {1}".format(severity, msg))
 
-	def refresh(self, symbol):
+	def mainPage(self):
 		
-		if symbol.lower() == "all":
-			self.source.refresh_all()
-		else:
-			self.source.refresh(symbol.upper())
-		
-	def load(self, symbol):
-		
-		if symbol.lower() == "all":
-			self.source.load_all()
-		else:
-			self.source.load(symbol.upper())
-		
-	def info_index(self, index):
-		
-		raise Exception("Not implemented yet")
-				
-	def refresh_index(self, index):
-		
-		raise Exception("Not implemented yet")
-		
-	def load_index(self, symbol):
-		
-		raise Exception("Not implemented yet")		
+		self.clearScreen()
+		print("Type <help> for a list of available commands")
 
+		while 1==1:
+			s = raw_input(">")
+			args = s.split(' ')
+			
+			command = args[0].strip().lower()
+			if command == 'help':
+				self.cmdHelp(args[1:])
+			elif command == 'list':
+				self.cmdList(args[1:])
+			elif command == 'load':
+				self.cmdLoad(args[1:])
+			elif command == 'refresh':
+				self.cmdRefresh(args[1:])
+			elif command == 'quit':
+				break
+			else:
+				print ("Unrecognized command")
+		
+	
+	def cmdList(self, args):
+		
+		try:
+			allsymbols = self.source._get_all_loaded_symbols()
+		except Exception, ex:
+			self.log("ERROR", "Unable to retrieve list of symbols")
+			return
+		
+		for symbol in allsymbols:
+			print "{0} last update on {1}".format(symbol[0], symbol[1])
+		print("")
+			
+		s = raw_input("Press Enter")
+		self.mainPage()
+	
+	
+	def cmdHelp(self, args):
+		
+		self.clearScreen()
+		print("Available commands:")
+		print("")
+		print("load - load symbol data from Yahoo servers into local database")
+		print("refresh - refresh symbol data from Yahoo servers into local database")
+		print("list - list all available symbols in local database")
+		print("help - print this help")
+		print("quit - quit this app")
+		print("")
+		
+		
+	def cmdRefresh(self, symbol):
+		
+		try:
+			if args[0].lower() == "all":
+				self.source.refresh_all()
+			else:
+				self.source.refresh(args[0].upper())
+		except Exception, ex:
+			self.log("ERROR", "Cannot refresh given symbol")
+		
+	def cmdLoad(self, args):
+
+		try:
+			if args[0].lower() == "all":
+				self.source.load_all()
+			else:
+				self.source.load(args[0].upper())
+		
+		except Exception, ex:
+			self.log("ERROR", "Cannot load given symbol")
+
+
+	def clearScreen(self):
+		
+		os.system('cls' if os.name == 'nt' else 'clear')
+		
 
 if __name__=='__main__':
 
@@ -64,27 +114,3 @@ if __name__=='__main__':
 	
 	app = MainApp(args.source)
 	
-	if (args.symbol == None and args.index == None):
-		print "You cannot specify a symbol and an index at the same time."
-		sys.exit(0)
-
-
-	if args.index:
-		
-		if args.info:
-			app.info(args.index)
-		elif args.refresh:
-			app.refresh(args.index)
-		elif args.load:
-			app.load(args.index)
-	
-	else:
-		
-		if args.info:
-			app.info(args.symbol)
-		elif args.refresh:
-			app.refresh(args.symbol)
-		elif args.load:
-			app.load(args.symbol)
-
-

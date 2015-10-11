@@ -58,6 +58,9 @@ def symbol_search(search_string):
 def default():
 	return f.render_template('index.html')
 
+@app.route('/plot/')
+def default():
+	return f.render_template('plot.html')
 
 
 if __name__ == '__main__':
