@@ -59,7 +59,7 @@ def default():
 	return f.render_template('index.html')
 
 @app.route('/plot/')
-def default():
+def plot():
 	return f.render_template('plot.html')
 
 
