@@ -22,7 +22,6 @@ class MainApp:
 
 	def mainPage(self):
 		
-		self.clearScreen()
 		print("Type <help> for a list of available commands")
 
 		while 1==1:
@@ -30,16 +29,18 @@ class MainApp:
 			args = s.split(' ')
 			
 			command = args[0].strip().lower()
-			if command == 'help':
+			if command == 'help' or command = 'h':
 				self.cmdHelp(args[1:])
-			elif command == 'list':
+			elif command == 'list' or command == 'l':
 				self.cmdList(args[1:])
 			elif command == 'load':
 				self.cmdLoad(args[1:])
 			elif command == 'refresh':
 				self.cmdRefresh(args[1:])
-			elif command == 'quit':
-				break
+			elif command == 'clear' or command == 'c':
+				self.cmdClearScreen()
+			elif command == 'quit' or command == 'q':
+				self.cmdQuit()
 			else:
 				print ("Unrecognized command")
 		
@@ -56,20 +57,20 @@ class MainApp:
 			print "{0} last update on {1}".format(symbol[0], symbol[1])
 		print("")
 			
-		s = raw_input("Press Enter")
-		self.mainPage()
+		#s = raw_input("Press Enter")
+		#self.mainPage()
 	
 	
 	def cmdHelp(self, args):
 		
-		self.clearScreen()
 		print("Available commands:")
 		print("")
 		print("load - load symbol data from Yahoo servers into local database")
 		print("refresh - refresh symbol data from Yahoo servers into local database")
-		print("list - list all available symbols in local database")
-		print("help - print this help")
-		print("quit - quit this app")
+		print("list (l) - list all available symbols in local database")
+		print("help (h)- print this help")
+		print("clear (c)- clear screen")
+		print("quit (q)- quit this app")
 		print("")
 		
 		
@@ -94,10 +95,12 @@ class MainApp:
 		except Exception, ex:
 			self.log("ERROR", "Cannot load given symbol")
 
-
-	def clearScreen(self):
-		
+	def cmdClearScreen(self):
 		os.system('cls' if os.name == 'nt' else 'clear')
+		
+	def cmdQuit(self):
+		sys.exit(0)
+
 		
 
 if __name__=='__main__':
