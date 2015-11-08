@@ -29,7 +29,7 @@ class MainApp:
 			args = s.split(' ')
 			
 			command = args[0].strip().lower()
-			if command == 'help' or command = 'h':
+			if command == 'help' or command == 'h':
 				self.cmdHelp(args[1:])
 			elif command == 'list' or command == 'l':
 				self.cmdList(args[1:])
@@ -103,7 +103,7 @@ class MainApp:
 
 		
 
-if __name__=='__main__':
+if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='A simple, command line interface, to pymta LocalSource')
 	parser.add_argument('source', help='path to the LocalSource database')
