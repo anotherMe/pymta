@@ -1,3 +1,5 @@
+{% load staticfiles %}
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -8,10 +10,11 @@
     
     <title></title>
 
-    <link href="/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css" rel="stylesheet">
-    <link href="/static/style/plot.css" rel="stylesheet">
-	<link href="/bower_components/toastr/toastr.css" rel="stylesheet">
+
+    <link href="/static/wallstreet/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/wallstreet/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css" rel="stylesheet">
+    <link href={% static "wallstreet/style/plot.css" %} rel="stylesheet">
+	<link href="/static/wallstreet/bower_components/toastr/toastr.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -22,34 +25,8 @@
     
   </head>
   <body>
-	  
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">Project name</a>
-        </div>
-        <div id="navbar" class="collapse navbar-collapse">
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-        </div><!--/.nav-collapse -->
-      </div>
-    </nav>
-    
+	      
     <div class="container">
-
-		<div class="starter-template">
-			<h1>Bootstrap starter template</h1>
-			<p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
-		</div>
 
 		<div class="row">
 
@@ -91,15 +68,15 @@
 
     </div><!-- /.container -->
 	  
-    <script src="/bower_components/jquery/dist/jquery.min.js"></script>
-    <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
-    <script src="/bower_components/knockout/dist/knockout.js"></script>
-	<script src="/bower_components/d3/d3.min.js"></script>
-	<script src="/bower_components/TechanJS/dist/techan.min.js"></script>
-	<script src="/bower_components/toastr/toastr.min.js"></script>
+    <script src="/static/wallstreet/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="/static/wallstreet/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/static/wallstreet/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+    <script src="/static/wallstreet/bower_components/knockout/dist/knockout.js"></script>
+	<script src="/static/wallstreet/bower_components/d3/d3.min.js"></script>
+	<script src="/static/wallstreet/bower_components/TechanJS/dist/techan.min.js"></script>
+	<script src="/static/wallstreet/bower_components/toastr/toastr.min.js"></script>
 
-	<script src="/static/js/plot.js"></script>
+	<script src={% static "wallstreet/js/plot.js" %}></script>
 
 	<script>
 
