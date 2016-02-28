@@ -21,8 +21,8 @@ login_manager.init_app(app)
 def load_user(user_id):
 	
 	user = models.User('pippo', 'fasdfasdfasdfa')
-    return user.get(user_id)
-    
+	return user.get(user_id)
+	
 
 def get_db():
 	"""Return current database instance; creating it, if not exists."""
@@ -34,17 +34,17 @@ def get_db():
 # Add a custom static data ( apart from the default "static" folder )
 @app.route('/bower_components/<path:filename>')
 def custom_static(filename):
-    #~ return send_from_directory(app.config['CUSTOM_STATIC_PATH'], filename)
-    return flask.send_from_directory('bower_components', filename)
+	#~ return send_from_directory(app.config['CUSTOM_STATIC_PATH'], filename)
+	return flask.send_from_directory('bower_components', filename)
 
 
 @app.teardown_appcontext
 def close_connection(exception):
 	
-    db = getattr(flask.g, '_database', None)
-    if db is not None:
-        db.dispose()
-        
+	db = getattr(flask.g, '_database', None)
+	if db is not None:
+		db.dispose()
+		
 
 @app.route('/get_eod/<symbol>/')
 @app.route('/get_eod/<symbol>/<mindate>/')
@@ -102,11 +102,11 @@ def login():
 			errorMsg = 'Invalid username/password'
 	
 	return flask.render_template('login.html', loginErrorMsg=errorMsg)
-    
+	
 @app.route("/testlogin/")
 @fLogin.login_required
 def testlogin():
-    return "Hello, logged in user"
+	return "Hello, logged in user"
 
 if __name__ == '__main__':
 	

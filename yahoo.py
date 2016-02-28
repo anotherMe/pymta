@@ -1,7 +1,6 @@
 #!/usr/bin/env python2
 
 import logging
-
 import sqlite3
 import urllib
 import csv
@@ -20,9 +19,10 @@ class Source(object):
 	"""
 
 	def __init__(self):
-		logging.basicConfig(filename='yahoo.log', level=logging.DEBUG) # log to file
-		#logging.getLogger().addHandler(self.logger.StreamHandler()) # log to stderr too
+		
+		logging.basicConfig(filename='yahoo.log', level=logging.DEBUG, format='%(asctime)s %(message)s') # log to file
 		self.logger = logging.getLogger(__name__)
+		#~ logging.getLogger().addHandler(self.logger.StreamHandler()) # log to stderr too
 		
 	def _get_closings(self):
 		raise Exception("Not implemented yet")
@@ -227,10 +227,10 @@ class OnlineSource(Source):
 		html = response.read()
 		
 		if "There are no results for the given search term" in html:
-			self.logger.info("Symbol {0} not found in local database".format(symbol_name))
+			self.logger.info("Symbol {0} not found in remote database".format(symbol_name))
 			return False
 		else:
-			self.logger.info("Symbol {0} found in local database".format(symbol_name))
+			self.logger.info("Symbol {0} found in remote database".format(symbol_name))
 			return True
 
 
@@ -273,7 +273,7 @@ class LocalSource(Source):
 			raise Exception("Table DAT_EoD not found. Are you sure this is a proper data source ?")
 
 
-	def exists(self, symbol_name):
+	def eod_exists(self, symbol_name):
 		"""Check if given symbol exists in local EoD table, that is to
 		say that we check if exists at least one row of data for the 
 		given symbol.
@@ -363,33 +363,15 @@ class LocalSource(Source):
 		maxdate = datetime.datetime.strptime(str(maxdate_str), "%Y-%m-%d")
 		return maxdate		
 		
-	def _get_all_loaded_symbols(self):
-		"""Return all the symbols present in the local database, with
-		related most recent date.
-		
-		These are not the symbols for which we have data, just the 
-		symbols present in the DAT_Symbol table."""
-		
-		cur = self.conn.cursor()
-		cur.execute("select symbol, strftime('%Y-%m-%d', max(date)) as maxDate from DAT_EoD group by symbol order by symbol")
-
-		rows = cur.fetchall()
-		cur.close()
-		
-		symbols = []
-		for row in rows:
-			symbols.append([row[0], row[1]])
-
-		return symbols
 			
-	def _get_all_symbols(self):
+	def symbol_get_all(self):
 		"""Return all the symbols present in the local database.
 		
 		These are not the symbols for which we have data, just the 
 		symbols present in the DAT_Symbol table."""
 		
 		cur = self.conn.cursor()
-		cur.execute("select code from DAT_symbol order by code")
+		cur.execute("select code, descr from DAT_symbol order by code")
 
 		rows = cur.fetchall()
 		cur.close()
@@ -400,23 +382,84 @@ class LocalSource(Source):
 
 		return symbols
 		
-	def _get_closings(self, symbol_name, mindate=None, maxdate=None):
+	
+	def symbol_get_all_loaded(self):
+		"""Return all the symbols present in the local database, with
+		related most recent date.
+		
+		These are the symbols for which we have data, not the 
+		symbols present in the DAT_Symbol table."""
+		
+		cur = self.conn.cursor()
+		#~ cur.execute("select symbol, strftime('%Y-%m-%d', max(date)) as maxDate from DAT_EoD group by symbol order by symbol")
+		cur.execute("select symbol, date(max(date), 'unixepoch') as maxDate from DAT_EoD group by symbol order by symbol")
+
+		rows = cur.fetchall()
+		cur.close()
+		
+		symbols = []
+		for row in rows:
+			symbols.append([row[0], row[1]])
+
+		return symbols
+		
+		
+	def eod_get_closings(self, symbol_name, mindate=None, maxdate=None):
 		"""Returns: a list of tuple ('date', 'close')
 		"""
 		return self._query(symbol_name, ['date', 'close'], mindate, maxdate)
 
-	def _get_volumes(self, symbol_name, mindate=None, maxdate=None):
+	def eod_get_volumes(self, symbol_name, mindate=None, maxdate=None):
 		"""Returns: a list of tuple ('date', 'volume')
 		"""
 		return self._query(symbol_name, ['date', 'volume'], mindate, maxdate)
 		
-	def _get_ochlv(self, symbol_name, mindate=None, maxdate=None):
+	def eod_get_ochlv(self, symbol_name, mindate=None, maxdate=None):
 		"""Returns: a list of tuple ('date', 'open', 'close', 'high', 'low', 'volume')
 		"""
 		return self._query(symbol_name, ['date', 'open', 'close', 'high', 'low', 'volume'], mindate, maxdate)
 	
+	def symbol_exists(self, symbolName):
+		"""Check for symbol existence"""
+		
+		sql = "select * from DAT_Symbol where code = '{0}'".format(symbolName)
+		
+		cur = self.conn.cursor()
+		cur.execute (sql)
+		row = cur.fetchone()
+		cur.close()
+		
+		if row:
+			return True
+		else:
+			return False
+		
 	
-	def refresh(self, symbol_name):
+	def symbol_search(self, string):
+		"""Search database for a symbol with symbol name """
+		raise Exception("Not implemented yet")
+	
+	def symbol_add(self, symbol_name, symbol_descr=None):
+		"""Add given symbol to database"""
+		
+		if OnlineSource().exists(symbol_name):
+			cur = self.conn.cursor()
+			cur.execute('INSERT INTO `DAT_Symbol` (`code`, `descr`)'
+				' VALUES (?,?)', (symbol_name, symbol_descr))
+			self.conn.commit()
+		else:
+			raise Exception("Given symbol does not exists")
+		
+	
+	def symbol_add_index(self, string):
+		"""Given an index name, loads a list of symbols """
+		raise Exception("Not implemented yet")
+	
+	def index_list(self):
+		"""Retrieve the list of the available index"""
+		raise Exception("Not implemented yet")
+	
+	def eod_refresh(self, symbol_name):
 		
 		self.logger.info("Refreshing symbol <{0}>".format(symbol_name))
 		
@@ -440,7 +483,7 @@ class LocalSource(Source):
 		self._load_from_csv(symbol_name, filename)
 		
 		
-	def refresh_all(self):
+	def eod_refresh_all(self):
 		
 		symbols = self._get_all_symbols()
 		self.logger.info("Found {0} total symbols in database".format(len(symbols)))
@@ -452,7 +495,7 @@ class LocalSource(Source):
 			counter += 1
 		
 		
-	def _load_from_csv(self, symbol_name, filename):
+	def eod_load_from_csv(self, symbol_name, filename):
 		"""Load EoD data of given symbol from the CSV file.
 		
 		Usually, the CSV you load the data from is the one that you 
@@ -484,15 +527,16 @@ class LocalSource(Source):
 		self.conn.commit()
 		
 		
-	def _load_index_from_csv(self, index_name, filename, index_descr=None):
-		"""Given a CSV file, containing a list of all the symbols compo_
-		sing an index, populates all the related table in the database.
+	def symbol_load_from_csv(self, filename, index_name, index_descr=None):
+		"""Parse a CSV file, containing a list of symbols, to populate
+		DAT_symbol table. Loaded symbols will be linked to the newly 
+		created index ( DAT_index table ).
 		
 		The CSV file is supposed to be UTF-8 encoded.
 		
-		The CSV file, with tab separated data, should at leas contain two
-		columns: the first one being the Yahoo symbol and the second a
-		description of the symbol.
+		The CSV file, with tab separated data, should at least contain 
+		two columns: the first one being the Yahoo symbol and the second 
+		a description of the symbol.
 		
 		For the time being, you have to manually create the CSV. My 
 		suggestion is to make some copying&pasting from a page like this 
@@ -502,8 +546,8 @@ class LocalSource(Source):
 		
 		Parameters:
 			
-			<index_name> :: the name of the index ( ie: a Yahoo symbol )
-			<index_descr> :: an optional short text describing the index
+			<index_name> :: short name for the index ( ie: 'FTSEMIB' )
+			<index_descr> :: an optional, longer text describing the index
 			
 		"""
 		

@@ -171,7 +171,7 @@ class LocalSource(unittest.TestCase):
 		conn.close()
 		self.assertTrue(rowcount[0] > 0)
 		
-	def test_load_index_from_csv(self):
+	def test_load_symbols_from_csv(self):
 		
 		self.source._load_index_from_csv("TEST_INDEX", CSV_INDEX_FILE, None)
 		
