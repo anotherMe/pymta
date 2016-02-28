@@ -262,6 +262,7 @@ class LocalSource(Source):
 			initialize = True
 
 		self.conn = sqlite3.connect(path)
+		self.conn.text_factory = str # https://docs.python.org/2/library/sqlite3.html#sqlite3.Connection.text_factory
 		###self.conn.row_factory = sqlite3.Row # rows can be now accessed both by index (like tuples) and case-insensitively by name
 		
 		if initialize: self._initialize()
@@ -376,11 +377,7 @@ class LocalSource(Source):
 		rows = cur.fetchall()
 		cur.close()
 		
-		symbols = []
-		for row in rows:
-			symbols.append(row[0])
-
-		return symbols
+		return rows
 		
 	
 	def symbol_get_all_loaded(self):
@@ -552,7 +549,7 @@ class LocalSource(Source):
 		"""
 		
 		self.logger.info("Loading index {0}".format(index_name))
-		
+
 		try:
 
 			cur = self.conn.cursor()
@@ -588,7 +585,8 @@ class LocalSource(Source):
 			
 		except Exception, ex:
 			self.conn.rollback()
-			raise Exception(ex)
+			self.logger.error(ex.message)
+			raise Exception("Cannot parse file {0}".format(filename))
 		
 		self.conn.commit()
 		

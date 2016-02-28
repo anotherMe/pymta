@@ -13,50 +13,14 @@ class WindowAdd(tk.Toplevel):
 		mainFrame = tk.Frame(self)
 		mainFrame.pack(fill=tk.BOTH, expand=1)
 
-		
-class WindowAddFromFile_DELETE(tk.Toplevel):
-	
-	def __init__(self, master):
-		
-		tk.Toplevel.__init__(self, master)
-		self.transient(master)
-		
-		mainFrame = tk.Frame(self)
-		mainFrame.pack(fill=tk.BOTH, expand=1)
-		
-		fileFrame = tk.Frame(mainFrame)
-		fileFrame.pack(fill=tk.BOTH, expand=1)
-		fileLabel = tk.Label(fileFrame, text="Filename")
-		fileEntry = tk.Entry(state=tk.DISABLED)
-		
-		nameFrame = tk.Frame(mainFrame)
-		nameFrame.pack(fill=tk.BOTH, expand=1)
-		
-		descrFrame = tk.Frame(mainFrame)
-		descrFrame.pack(fill=tk.BOTH, expand=1)
-		
-		self.grab_set()
-		
-		w = Label(master, text="Hello, world!")
-		w.pack()
-		
-	
-	def askForFile(self):
-		
-		filename = tkFileDialog.askopenfilename(multiple=False)
-
-		if filename:
-			self.con.info("User asked to open file {0}".format(filename))
-			self.source.symbol_load_from_csv(filename)
-
-		self.wait_window(self)
-
 
 class WindowAddFromFile(tk.Toplevel):
 
-	def __init__(self, parent):
+	def __init__(self, parent, dataSource):
 
 		tk.Toplevel.__init__(self, parent)
+		
+		self.source = dataSource
 		
 		self.transient(parent)
 		self.title("Load symbols from file")
@@ -64,7 +28,7 @@ class WindowAddFromFile(tk.Toplevel):
 		self.result = None
 
 		body = tk.Frame(self)
-		self.initial_focus = self.body(body)
+		self.initial_focus = self
 		body.pack()
 
 		fileFrame = tk.Frame(body)
@@ -149,16 +113,16 @@ class WindowAddFromFile(tk.Toplevel):
 			tkMessageBox.showwarning("pymta", "Name entry is empty")
 			return 0
 		
-		if self.descrEntry.get().strip() == '':
-			tkMessageBox.showwarning("pymta", "Description entry is empty")
-			return 0
+		#~ if self.descrEntry.get().strip() == '':
+			#~ tkMessageBox.showwarning("pymta", "Description entry is empty")
+			#~ return 0
 		
 		return 1 # override
 
 
 	def apply(self):
 
-		pass # override
+		self.source.symbol_load_from_csv(self.fileEntry.get(), self.nameEntry.get(), self.descrEntry.get())
 		
 
 	def chooseFile(self):

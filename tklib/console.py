@@ -7,6 +7,8 @@ class Window(tk.Toplevel):
 		
 		tk.Toplevel.__init__(self, master)
 		
+		self.title("Log console")
+		
 		mainFrame = tk.Frame(self)
 		mainFrame.pack(fill=tk.BOTH, expand=1)
 
