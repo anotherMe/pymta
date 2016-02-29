@@ -54,7 +54,7 @@ class WindowAddFromFile(tk.Toplevel):
 		self.descrEntry = tk.Entry(descrFrame)
 		self.descrEntry.pack(side=tk.LEFT)
 		
-		box = tk.Frame(body)
+		btnBox = tk.Frame(body)
 		w = tk.Button(box, text="OK", width=10, command=self.ok, default=tk.ACTIVE)
 		w.pack(side=tk.LEFT, padx=5, pady=5)
 		w = tk.Button(box, text="Cancel", width=10, command=self.cancel)
@@ -63,7 +63,7 @@ class WindowAddFromFile(tk.Toplevel):
 		self.bind("<Return>", self.ok)
 		self.bind("<Escape>", self.cancel)
 
-		box.pack()
+		btnBox.pack()
 
 		self.grab_set()
 
