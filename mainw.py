@@ -139,7 +139,6 @@ class Application():
 		
 		symbols = self.source.symbol_get_all()
 		for symbol in symbols:
-			self.con.info(symbol)
 			#~ self.symbolsList.insert('', 'end', text=symbol[0], values=("{0}".format(symbol[1].encode('ascii','replace'))))
 			#~ self.symbolsList.insert('', 'end', text=symbol[0], values=[symbol[1].encode('ascii','replace')])
 			self.symbolsList.insert('', 'end', text=symbol[0], values=[symbol[1]])
