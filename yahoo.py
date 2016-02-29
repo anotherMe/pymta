@@ -372,7 +372,10 @@ class LocalSource(Source):
 		symbols present in the DAT_Symbol table."""
 		
 		cur = self.conn.cursor()
-		cur.execute("select code, descr from DAT_symbol order by code")
+		# cur.execute("select code, descr from DAT_symbol order by code")
+		cur.execute("select sym.code, sym.descr, eod.maxdate from DAT_Symbol sym "\
+			"left join ( select symbol, strftime('%Y-%m-%d', max(date)) as maxdate "\
+			"from DAT_EoD group by date ) eod on sym.code = eod.symbol")
 
 		rows = cur.fetchall()
 		cur.close()
@@ -456,31 +459,37 @@ class LocalSource(Source):
 		"""Retrieve the list of the available index"""
 		raise Exception("Not implemented yet")
 	
-	def eod_refresh(self, symbol_name):
+	def symbol_refresh_eod(self, symbol_name):
 		
+		pdb.set_trace()
 		self.logger.info("Refreshing symbol <{0}>".format(symbol_name))
 		
 		# check if symbol exists
-		if not self.exists(symbol_name):
+		if not self.symbol_exists(symbol_name):
 			raise Exception("Given symbol does not exist.")
 		
 		maxdate = self.get_maxdate(symbol_name)
-		self.logger.info("Max date available: {0}".format(maxdate.strftime("%Y-%m-%d")))
-		
-		# check if it's up to date
-		delta = datetime.datetime.today() - maxdate
-		if delta.days <= 2:
-			self.logger.info("Already up to date, skipping symbol.")
-			return
+		if maxdate == None:
+			self.logger.info("No EoD data available for given symbol")
+			maxdate = datetime.datetime(1900,1,1)
+		else:
+			self.logger.info("Max date available: {0}".format(maxdate.strftime("%Y-%m-%d")))
 			
-		maxdate = maxdate + datetime.timedelta(days=1) # start downloading from the next day
-		self.logger.info("Computed max date: {0}".format(maxdate.strftime("%Y-%m-%d")))
+			# check if it's up to date
+			delta = datetime.datetime.today() - maxdate
+			if delta.days <= 2:
+				self.logger.info("Already up to date, skipping symbol refresh.")
+				return
+				
+			maxdate = maxdate + datetime.timedelta(days=1) # start downloading from the next day
+			self.logger.info("Computed max date: {0}".format(maxdate.strftime("%Y-%m-%d")))
 		
 		filename = OnlineSource().download2csv(symbol_name, mindate=maxdate)
 		self._load_from_csv(symbol_name, filename)
 		
 		
-	def eod_refresh_all(self):
+	def symbol_all_refresh_eod(self):
+		"""Refresh EoD data for all the symbols stored in the local database"""
 		
 		symbols = self._get_all_symbols()
 		self.logger.info("Found {0} total symbols in database".format(len(symbols)))
