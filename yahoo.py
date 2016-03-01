@@ -370,15 +370,13 @@ class LocalSource(Source):
 		
 			
 	def symbol_get_all(self):
-		"""Return all the symbols present in the local database.
-		
-		These are not the symbols for which we have data, just the 
-		symbols present in the DAT_Symbol table."""
+		"""Return all the symbols stored in the DAT_Symbol table.
+		We also retrieve the last EoD date, if present"""
 		
 		cur = self.conn.cursor()
 		# cur.execute("select code, descr from DAT_symbol order by code")
 		cur.execute("select sym.code, sym.descr, eod.maxdate from DAT_Symbol sym "\
-			"left join ( select symbol, strftime('%Y-%m-%d', max(date)) as maxdate "\
+			"left join ( select symbol, date(max(date), 'unixepoch') as maxdate "\
 			"from DAT_EoD group by symbol ) eod on sym.code = eod.symbol")
 
 		rows = cur.fetchall()
