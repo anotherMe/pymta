@@ -65,3 +65,4 @@ class Window(tk.Toplevel):
 		self.console.insert(tk.END, msg)
 		self.console.insert(tk.END, "\n")
 		self.console.config(state=tk.DISABLED)
+		self.console.update_idletasks() # force flush of tkText widget
