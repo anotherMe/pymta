@@ -39,6 +39,15 @@ class SymbolList(tk.Frame):
 		for symbol in symbols:
 			self.symbolsList.insert('', 'end', text=symbol[0], values=[symbol[1], symbol[2]])
 		
+	def get_selected(self):
+		
+		return self.symbolsList.selection()
+		
+	def get_item(self, idx):
+		
+		return self.symbolsList.item(idx)
+		
+		
 	# def do_popup(self, event):
 		
 		# try:

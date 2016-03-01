@@ -53,8 +53,6 @@ class Window(tk.Toplevel):
 	def critical(self, msg):
 		
 		self._log(CRITICAL, msg)
-	
-
 
 	def _log(self, level, msg):
 		"""Log a message to the console widget"""

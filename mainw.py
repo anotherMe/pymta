@@ -49,20 +49,21 @@ class Application():
 		notebook = ttk.Notebook(self.root)
 		notebook.pack(fill=tk.BOTH, expand=1)
 		
-		# symbol tab
-		symbolTab = tk.Frame(notebook)
-		#~ symbolTab.pack(fill=tk.BOTH, expand=1)
-		notebook.add(symbolTab, text="Manage symbols")
+		# tabs
+		manageSymbolsTab = tk.Frame(notebook)
+		notebook.add(manageSymbolsTab, text="Manage symbols")
+		plotTab = tk.Frame(notebook)
+		notebook.add(plotTab, text="Plot")
 		
 		# show console window
 		self.con = tkcon.Window(self.root)
 		
 		# symbols list
-		self.symbolsList = tksym.SymbolList(symbolTab)
+		self.symbolsList = tksym.SymbolList(manageSymbolsTab)
 		self.symbolsList.pack(fill=tk.BOTH, expand=1)
 		
 		# button bar
-		btnFrame = tk.Frame(symbolTab)
+		btnFrame = tk.Frame(manageSymbolsTab)
 		btnFrame.pack(fill=tk.BOTH, expand=0)
 		btnAdd = tk.Button(btnFrame, text="Add new", command=self.symbol_add)
 		btnRefresh = tk.Button(btnFrame, text="Refresh selected", command=self.symbol_refreshEoD)
@@ -121,11 +122,11 @@ class Application():
 			
 	def symbol_refreshEoD(self):
 	
-		selectedIndexes = self.symbolsList.selection()
+		selectedIndexes = self.symbolsList.get_selected()
 		
 		for idx in selectedIndexes:
 		
-			symbol = self.symbolsList.item(idx)["text"]
+			symbol = self.symbolsList.get_item(idx)["text"]
 			
 			try:
 				self.con.info("Refreshing symbol {0}".format(symbol))
