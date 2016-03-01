@@ -87,7 +87,7 @@ class OnlineSource(Source):
 		datetime_obj = datetime.datetime.strptime(inputdate, '%Y-%m-%d')
 		return int(datetime_obj.strftime('%s'))
 
-	def _get_closings(self, symbol_name, mindate=None, maxdate=None):
+	def symbol_get_closings(self, symbol_name, mindate=None, maxdate=None):
 		"""Returns: a list of tuple ('date', 'close')
 		"""
 		
@@ -110,7 +110,7 @@ class OnlineSource(Source):
 		f.close()
 		return data
 
-	def _get_volumes(self, symbol_name, mindate=None, maxdate=None):
+	def symbol_get_volumes(self, symbol_name, mindate=None, maxdate=None):
 		"""Returns: a list of tuple ('date', 'volume')
 		"""
 		
@@ -133,7 +133,7 @@ class OnlineSource(Source):
 		f.close()
 		return data
 		
-	def _get_ochlv(self, symbol_name, mindate=None, maxdate=None):
+	def symbol_get_ochlv(self, symbol_name, mindate=None, maxdate=None):
 		"""Returns: a list of tuple ('date', 'open', 'close', 'high', 'low')
 		"""
 		
@@ -162,7 +162,7 @@ class OnlineSource(Source):
 		return data
 
 
-	def get_maxdate(self, symbol_name):
+	def symbol_get_maxdate(self, symbol_name):
 		"""Get the latest date available for the given symbol.
 		
 		Returns: datetime object
@@ -216,7 +216,7 @@ class OnlineSource(Source):
 		return urllib.urlretrieve(url)[0]
 		
 
-	def exists(self, symbol_name):
+	def symbol_exists(self, symbol_name):
 		"""Check if given symbol exists in yahoo database.
 		
 		Return True / False.
@@ -265,7 +265,7 @@ class LocalSource(Source):
 		self.conn.text_factory = str # https://docs.python.org/2/library/sqlite3.html#sqlite3.Connection.text_factory
 		###self.conn.row_factory = sqlite3.Row # rows can be now accessed both by index (like tuples) and case-insensitively by name
 		
-		if initialize: self._initialize()
+		if initialize: self.database_initialize()
 		
 		try:
 			cur = self.conn.cursor()
@@ -274,7 +274,7 @@ class LocalSource(Source):
 			raise Exception("Table DAT_EoD not found. Are you sure this is a proper data source ?")
 
 
-	def eod_exists(self, symbol_name):
+	def DELETE_eod_exists(self, symbol_name):
 		"""Check if given symbol exists in local EoD table, that is to
 		say that we check if exists at least one row of data for the 
 		given symbol.
@@ -345,7 +345,7 @@ class LocalSource(Source):
 		self.conn.close()
 
 
-	def get_maxdate(self, symbol_name):
+	def symbol_get_maxdate(self, symbol_name):
 		"""Get the most recent date available for the given symbol.
 		
 		Returns: a datetime object.
@@ -406,17 +406,17 @@ class LocalSource(Source):
 		return symbols
 		
 		
-	def eod_get_closings(self, symbol_name, mindate=None, maxdate=None):
+	def symbol_get_closings(self, symbol_name, mindate=None, maxdate=None):
 		"""Returns: a list of tuple ('date', 'close')
 		"""
 		return self._query(symbol_name, ['date', 'close'], mindate, maxdate)
 
-	def eod_get_volumes(self, symbol_name, mindate=None, maxdate=None):
+	def symbol_get_volumes(self, symbol_name, mindate=None, maxdate=None):
 		"""Returns: a list of tuple ('date', 'volume')
 		"""
 		return self._query(symbol_name, ['date', 'volume'], mindate, maxdate)
 		
-	def eod_get_ochlv(self, symbol_name, mindate=None, maxdate=None):
+	def symbol_get_ochlv(self, symbol_name, mindate=None, maxdate=None):
 		"""Returns: a list of tuple ('date', 'open', 'close', 'high', 'low', 'volume')
 		"""
 		return self._query(symbol_name, ['date', 'open', 'close', 'high', 'low', 'volume'], mindate, maxdate)
@@ -451,15 +451,7 @@ class LocalSource(Source):
 			self.conn.commit()
 		else:
 			raise Exception("Given symbol does not exists")
-		
 	
-	def symbol_add_index(self, string):
-		"""Given an index name, loads a list of symbols """
-		raise Exception("Not implemented yet")
-	
-	def index_list(self):
-		"""Retrieve the list of the available index"""
-		raise Exception("Not implemented yet")
 	
 	def symbol_refresh_eod(self, symbol_name):
 		
@@ -469,7 +461,7 @@ class LocalSource(Source):
 		if not self.symbol_exists(symbol_name):
 			raise Exception("Given symbol does not exist.")
 		
-		maxdate = self.get_maxdate(symbol_name)
+		maxdate = self.symbol_get_maxdate(symbol_name)
 		if maxdate == None:
 			self.logger.info("No EoD data available for given symbol")
 			maxdate = datetime.datetime(1900,1,1)
@@ -570,7 +562,7 @@ class LocalSource(Source):
 				" values ('{0}', '{1}')".format(index_name, index_descr))
 			
 			### load DAT_symbol and DAT_index_symbol table ###
-						
+			
 			f = open(filename, 'rb')
 			reader = csv.reader(filter(lambda row: row[0]!='#', f), delimiter='\t', )
 
@@ -601,7 +593,7 @@ class LocalSource(Source):
 		self.conn.commit()
 		
 		
-	def _initialize(self):
+	def database_initialize(self):
 		
 		ddl = open('create_schema.sql', 'r').read()
 		cur = self.conn.cursor()
@@ -610,33 +602,33 @@ class LocalSource(Source):
 		cur.close()
 		
 	
-	def load(self, symbol_name):
-		"""Download and reload onto the local database all the data for 
-		the given symbol.
+	def symbol_load_eod(self, symbol_name):
+		"""Download data from Yahoo servers to a local file, then load 
+		these data into local database.
 		"""
 		
 		self.logger.info("Loading data for symbol {0}".format(symbol_name))
 		
-		self._delete(symbol_name)	# clean database
+		self.delete(symbol_name)	# clean database
 		filename = OnlineSource().download2csv(symbol_name)
 		self._load_from_csv(symbol_name, filename)
 		
 		
-	def load_all(self):
+	def symbol_all_load_eod(self):
 		"""Load all historical prices for symbols included in table 
 		DAT_symbol."""
 		
-		symbols = self._get_all_symbols()
+		symbols = self.symbol_get_all()
 		self.logger.info("Found {0} total symbols in database".format(len(symbols)))
 		
 		counter = 1
 		for symbol in symbols:
 			self.logger.info("Loading symbol {0}/{1}".format(counter, len(symbols)))
-			self.load(symbol)
+			self.symbol_load_eod(symbol)
 			counter += 1
 		
 
-	def load_all_from_index(self, index_name):
+	def DELETE_load_all_from_index(self, index_name):
 		"""Table DAT_index_symbol links an index with many symbols.
 		
 		Given and index, this method loads all the linked symbols.
@@ -654,11 +646,11 @@ class LocalSource(Source):
 		counter = 1
 		for row in rows:
 			self.logger.info("Loading symbol {0}/{1}".format(counter, len(rows)))
-			self.load(row[0])
+			self.symbol_load_eod(row[0])
 			counter += 1
 
 
-	def _delete(self, symbol):
+	def symbol_delete(self, symbol):
 	
 		cur = self.conn.cursor()
 		cur.execute('delete from DAT_EoD where symbol = ''?''', (symbol,) )

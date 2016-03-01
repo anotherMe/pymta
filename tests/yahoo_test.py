@@ -12,7 +12,6 @@ import pdb
 DB3_FILE = "tests/test.db3"
 CSV_FILE = "tests/test.csv"
 CSV_INDEX_FILE = "tests/index_test.csv"
-#~ CSV_INDEX_FILE = "data/FTSEMIB.MI.csv"
 TEST_SYMBOL = "TEST"
 ONLINE_TEST_SYMBOL = "ENI.MI" # for testing yahoo online database
 TEST_INDEX_SYMBOL = "^DJI"
@@ -58,10 +57,10 @@ class OnlineSource(unittest.TestCase):
 		self.assertEqual(len(rows[0]), 6)
 		
 	def test_exists(self):
-		self.assertTrue(self.source.exists(ONLINE_TEST_SYMBOL))
+		self.assertTrue(self.source.symbol_exists(ONLINE_TEST_SYMBOL))
 
 	def test_exists_not(self):
-		self.assertFalse(self.source.exists('YARGLA.MI'))
+		self.assertFalse(self.source.symbol_exists('YARGLA.MI'))
 
 	def test_download2csv(self):
 		filename = self.source.download2csv(ONLINE_TEST_SYMBOL)
@@ -79,16 +78,16 @@ class LocalSource(unittest.TestCase):
 		
 		silentremove(DB3_FILE)
 		self.source = yahoo.LocalSource(DB3_FILE)
-		self.source._load_from_csv(TEST_SYMBOL, CSV_FILE) # load fake prices as symbol `TEST`
+		self.source.eod_load_from_csv(TEST_SYMBOL, CSV_FILE) # load fake prices as symbol `TEST`
 	
 	def tearDown(self):
 		
 		self.source.close()
 		silentremove(DB3_FILE)
 
-	def test_delete(self):		
+	def test_symbol_delete(self):		
 		
-		self.source._delete(TEST_SYMBOL)
+		self.source.symbol_delete(TEST_SYMBOL)
 		
 		conn = sqlite3.connect(DB3_FILE)
 		cur = conn.cursor()
@@ -97,7 +96,7 @@ class LocalSource(unittest.TestCase):
 		self.assertTrue(rowcount[0] == 0)
 		conn.close()
 		
-	def test_load(self):
+	def test_symbol_load_eod(self):
 		
 		conn = sqlite3.connect(DB3_FILE)
 		cur = conn.cursor()
@@ -113,57 +112,54 @@ class LocalSource(unittest.TestCase):
 	def testquery_wColumns(self):
 		data = self.source._query("TEST", columns=['date', 'volume', 'close'])
 		self.assertTrue(len(data) > 0)
-
-	def test_exists(self):
-		self.assertTrue(self.source.exists(TEST_SYMBOL))
 	
-	def test_get_all_symbols(self):
-		symbols = self.source._get_all_symbols()
+	def testsymbol_get_all(self):
+		symbols = self.source.symbol_get_all()
 		self.assertTrue( len(symbols) > 0 )
 		
 	def test_get_maxdate(self):
 		
-		maxdate = self.source.get_maxdate(TEST_SYMBOL)
+		maxdate = self.source.symbol_get_maxdate(TEST_SYMBOL)
 		self.assertIsInstance(maxdate, datetime.datetime)
 
-	def test_get_closings(self):
-		rows = self.source._get_closings(TEST_SYMBOL)
+	def test_symbol_get_closings(self):
+		rows = self.source.symbol_get_closings(TEST_SYMBOL)
 		self.assertGreater(len(rows), 0)
 		self.assertEqual(len(rows[0]), 2)
 		
-	def test_get_volumes(self):
-		rows = self.source._get_volumes(TEST_SYMBOL)
+	def test_symbol_get_volumes(self):
+		rows = self.source.symbol_get_volumes(TEST_SYMBOL)
 		self.assertGreater(len(rows), 0)
 		self.assertEqual(len(rows[0]), 2)
 		
-	def test_get_ochlv(self):
-		rows = self.source._get_ochlv(TEST_SYMBOL)
+	def test_symbol_get_ochlv(self):
+		rows = self.source.symbol_get_ochlv(TEST_SYMBOL)
 		self.assertGreater(len(rows), 0)
 		self.assertEqual(len(rows[0]), 6)
 
 	@unittest.skip("Temporarily disabled because too expensive")
-	def test_load_all(self):
+	def test_symbol_all_load_eod(self):
 		
-		self.source._delete(TEST_SYMBOL)
-		self.source.load_all()
-		symbols = self.source._get_all_symbols()
+		self.source.symbol_delete(TEST_SYMBOL)
+		self.source.symbol_all_load_eod()
+		symbols = self.source.symbol_get_all()
 		loaded_symbols = self.source._query("select symbol from DAT_EoD group by symbol")
 		self.assertEqual(len(symbols), len(loaded_symbols))
 
 	@unittest.skip("Temporarily disabled because too expensive")
-	def test_load_all_from_index(self):
+	def test_symbol_load_all_from_csv(self):
 		
-		self.source._delete(TEST_SYMBOL)
-		symbols_start = self.source._get_all_symbols()
-		self.source._load_index_from_csv('TEST_INDEX', CSV_INDEX_FILE) # load indexex table
-		self.source.load_all_from_index('TEST_INDEX') # load symbols for the given index
-		symbols_end = self.source._get_all_symbols()
+		self.source.symbol_delete(TEST_SYMBOL)
+		symbols_start = self.source.symbol_get_all()
+		self.source.symbol_load_from_csv('TEST_INDEX', CSV_INDEX_FILE) # load symbols from CSV file
+		self.source.symbol_load_all() # load EoD
+		symbols_end = self.source.symbol_get_all()
 		self.assertEqual(len(symbols_start), 0)
 		self.assertGreater(len(symbols_start), len(symbols_start))
 
-	def test_load_from_csv(self):
+	def test_eod_load_from_csv(self):
 		
-		self.source._load_from_csv("LOADTEST", CSV_FILE)
+		self.source.eod_load_from_csv("LOADTEST", CSV_FILE)
 		conn = sqlite3.connect(DB3_FILE)
 		cur = conn.cursor()
 		cur.execute("select count(*) from DAT_EoD where symbol = '{0}'".format("LOADTEST"))
@@ -171,9 +167,9 @@ class LocalSource(unittest.TestCase):
 		conn.close()
 		self.assertTrue(rowcount[0] > 0)
 		
-	def test_load_symbols_from_csv(self):
+	def test_symbol_load_from_csv(self):
 		
-		self.source._load_index_from_csv("TEST_INDEX", CSV_INDEX_FILE, None)
+		self.source.symbol_load_from_csv(CSV_INDEX_FILE, "TEST_INDEX", None)
 		
 		conn = sqlite3.connect(DB3_FILE)
 
