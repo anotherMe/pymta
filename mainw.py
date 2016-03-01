@@ -40,10 +40,9 @@ class Application():
 		filemenu.add_command(label="Open", command=self.database_open)
 		filemenu.add_command(label="Exit", command=self.quit)
 		menubar.add_cascade(label="File", menu=filemenu)
-		symbolmenu = tk.Menu(menubar, tearoff=0)
-		symbolmenu.add_command(label="Add", command=self.symbol_add)
-		symbolmenu.add_command(label="Load from file", command=self.symbol_load_from_file)
-		menubar.add_cascade(label="Symbol", menu=symbolmenu)
+		toolsmenu = tk.Menu(menubar, tearoff=0)
+		toolsmenu.add_command(label="Load symbols from file", command=self.symbol_load_from_file)
+		menubar.add_cascade(label="Tools", menu=toolsmenu)
 		self.root.config(menu=menubar)
 		
 		# create the main frame
@@ -77,6 +76,7 @@ class Application():
 		btnFrame.pack(fill=tk.BOTH, expand=0)
 		btnAdd = tk.Button(btnFrame, text="Add new", command=self.symbol_add)
 		btnRefresh = tk.Button(btnFrame, text="Refresh selected", command=self.symbol_refreshEoD)
+        btnPlot = tk.Button(btnFrame, text="Plot selected", command=self.symbol_plot)
 		btnAdd.pack(side=tk.RIGHT)
 		btnRefresh.pack(side=tk.RIGHT)
 		
@@ -152,8 +152,6 @@ class Application():
 				self.con.error("Cannot refresh symbol {0}".format(symbol))
 				self.con.error(ex.message)
 				continue
-				
-			self.con.info("Done")
 			
 		self.symbolsList_refresh()
 
@@ -171,7 +169,10 @@ class Application():
 		for symbol in symbols:
 			self.symbolsList.insert('', 'end', text=symbol[0], values=[symbol[1], symbol[2]])
 		
-			
+	def symbol_plot(self):
+        
+        pass
+    
 	def quit(self):
 	
 		self.root.quit()
