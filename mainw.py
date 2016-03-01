@@ -45,15 +45,20 @@ class Application():
 		menubar.add_cascade(label="Tools", menu=toolsmenu)
 		self.root.config(menu=menubar)
 		
-		# create the main frame
-		self.mainFrame = tk.Frame(self.root)
-		self.mainFrame.pack(fill=tk.BOTH, expand=1)
+		# notebook
+		notebook = ttk.Notebook(self.root)
+		notebook.pack(fill=tk.BOTH, expand=1)
+		
+		# symbol tab
+		symbolTab = tk.Frame(notebook)
+		#~ symbolTab.pack(fill=tk.BOTH, expand=1)
+		notebook.add(symbolTab, text="Manage symbols")
 		
 		# show console window
 		self.con = tkcon.Window(self.root)
 		
 		# symbols list
-		listFrame = tk.Frame(self.mainFrame)
+		listFrame = tk.Frame(symbolTab)
 		listFrame.pack(fill=tk.BOTH, expand=1)
 		
 		scrollbar = tk.Scrollbar(listFrame)
@@ -72,7 +77,7 @@ class Application():
 		# self.symbolsList.bind("<Button-3>", self.do_popup)
 		
 		# button bar
-		btnFrame = tk.Frame(self.mainFrame)
+		btnFrame = tk.Frame(symbolTab)
 		btnFrame.pack(fill=tk.BOTH, expand=0)
 		btnAdd = tk.Button(btnFrame, text="Add new", command=self.symbol_add)
 		btnRefresh = tk.Button(btnFrame, text="Refresh selected", command=self.symbol_refreshEoD)
