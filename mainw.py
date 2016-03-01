@@ -15,7 +15,7 @@ import yahoo
 
 import pdb
 
-VERSION="0.0.2"
+VERSION="0.0.3"
 
 DEFAULT_DATABASE_PATH="/home/marco/lab/pymta/devdb.db3"
 #DEFAULT_DATABASE_PATH="C:/mg/lab/pymta/devdb.db3"
@@ -58,23 +58,8 @@ class Application():
 		self.con = tkcon.Window(self.root)
 		
 		# symbols list
-		listFrame = tk.Frame(symbolTab)
-		listFrame.pack(fill=tk.BOTH, expand=1)
-		
-		scrollbar = tk.Scrollbar(listFrame)
-		scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-		self.symbolsList = ttk.Treeview(listFrame, columns=["descr", "last_updated"])
+		self.symbolsList = tksym.SymbolList(symbolTab)
 		self.symbolsList.pack(fill=tk.BOTH, expand=1)
-		
-		self.symbolsList.config(yscrollcommand=scrollbar.set)
-		scrollbar.config(command=self.symbolsList.yview)
-
-		# symbols list context menu
-		# self.popup = tk.Menu(self.symbolsList, tearoff=0)
-		# self.popup.add_command(label="Refresh EoD", command=self.symbol_refreshEoD)
-		# self.popup.add_command(label="Plot", command=self.symbol_plot)
-		# self.symbolsList.bind("<Button-3>", self.do_popup)
 		
 		# button bar
 		btnFrame = tk.Frame(symbolTab)
@@ -87,14 +72,7 @@ class Application():
 		
 		# FIXME: delete following rows
 		self.source = yahoo.LocalSource(DEFAULT_DATABASE_PATH)
-		self.symbolsList_refresh()
-
-	# def do_popup(self, event):
-		
-		# try:
-			# self.popup.tk_popup(event.x_root, event.y_root, 0)
-		# finally:
-			# self.popup.grab_release()
+		self.symbolsList.refresh(self.source)
 			
 
 	def database_new(self):
@@ -121,7 +99,7 @@ class Application():
 				self.con.critical("Cannot open file {0} as local database".format(filename))
 				self.con.error(ex.message)
 			
-			self.symbolsList_refresh()
+			self.symbolsList.refresh(self.source)
 	
 	def symbol_load_from_file(self):
 		"""Add a group of symbols starting from one CSV index file"""
@@ -131,7 +109,7 @@ class Application():
 			return
 			
 		w = tksym.WindowAddFromFile(self.root, self.source)
-		self.symbolsList_refresh()
+		self.symbolsList.refresh(self.source)
 			
 
 	def symbol_add(self):
@@ -160,21 +138,8 @@ class Application():
 				self.con.error(ex.message)
 				continue
 			
-		self.symbolsList_refresh()
+		self.symbolsList.refresh(self.source)
 
-		
-	def symbolsList_refresh(self):
-		"""Rescan database to retrieve all the stored symbols"""
-		
-		
-		items = self.symbolsList.get_children()
-		if items != ():
-			for item in items:
-				self.symbolsList.delete(item)
-			
-		symbols = self.source.symbol_get_all()
-		for symbol in symbols:
-			self.symbolsList.insert('', 'end', text=symbol[0], values=[symbol[1], symbol[2]])
 		
 	def symbol_plot(self):
 		
