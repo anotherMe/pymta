@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+import sys
+import traceback
+import logging
+
 import Tkinter as tk
 import tkFileDialog
 import ttk
@@ -13,10 +17,16 @@ import pdb
 
 VERSION="0.0.2"
 
+# DEFAULT_DATABASE_PATH="/home/marco/lab/pymta/yahoo.db3"
+DEFAULT_DATABASE_PATH="C:/mg/lab/pymta/yahoo.db3"
+
 class Application():
 
 	
 	def __init__(self, root):
+		
+		logging.basicConfig(filename='mainw.log', format='%(asctime)s %(message)s') # log to file
+		self.log = logging.getLogger(__name__)
 		
 		self.root = root
 		self.source = None
@@ -71,8 +81,7 @@ class Application():
 		btnRefresh.pack(side=tk.RIGHT)
 		
 		# FIXME: delete following rows
-		# self.source = yahoo.LocalSource("/home/marco/lab/pymta/yahoo.db3")
-		self.source = yahoo.LocalSource("C:/mg/lab/pymta/yahoo.db3")
+		self.source = yahoo.LocalSource(DEFAULT_DATABASE_PATH)
 		self.symbolsList_refresh()
 
 	# def do_popup(self, event):
@@ -139,16 +148,25 @@ class Application():
 				self.source.symbol_refresh_eod(symbol)
 				
 			except Exception, ex:
+				self.log.error(traceback.format_exc())
 				self.con.error("Cannot refresh symbol {0}".format(symbol))
 				self.con.error(ex.message)
 				continue
 				
 			self.con.info("Done")
+			
+		self.symbolsList_refresh()
 
 		
 	def symbolsList_refresh(self):
 		"""Rescan database to retrieve all the stored symbols"""
 		
+		
+		items = self.symbolsList.get_children()
+		if items != ():
+			for item in items:
+				self.symbolsList.delete(item)
+			
 		symbols = self.source.symbol_get_all()
 		for symbol in symbols:
 			self.symbolsList.insert('', 'end', text=symbol[0], values=[symbol[1], symbol[2]])

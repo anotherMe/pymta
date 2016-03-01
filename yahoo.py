@@ -167,7 +167,7 @@ class OnlineSource(Source):
 		
 		Returns: datetime object
 		"""
-		
+
 		datelist = []
 		filename = self.download2csv(symbol_name)
 		f = open(filename, 'rb')
@@ -358,10 +358,14 @@ class LocalSource(Source):
 			" order by date_STR desc limit 1".format(symbol_name))
 
 		row = cur.fetchone()
-		maxdate_str = row[0]
 		cur.close()
 		
-		maxdate = datetime.datetime.strptime(str(maxdate_str), "%Y-%m-%d")
+		if row:
+			maxdate_str = row[0]
+			maxdate = datetime.datetime.strptime(str(maxdate_str), "%Y-%m-%d")
+		else:
+			maxdate = None
+		
 		return maxdate		
 		
 			
@@ -375,7 +379,7 @@ class LocalSource(Source):
 		# cur.execute("select code, descr from DAT_symbol order by code")
 		cur.execute("select sym.code, sym.descr, eod.maxdate from DAT_Symbol sym "\
 			"left join ( select symbol, strftime('%Y-%m-%d', max(date)) as maxdate "\
-			"from DAT_EoD group by date ) eod on sym.code = eod.symbol")
+			"from DAT_EoD group by symbol ) eod on sym.code = eod.symbol")
 
 		rows = cur.fetchall()
 		cur.close()
@@ -461,7 +465,6 @@ class LocalSource(Source):
 	
 	def symbol_refresh_eod(self, symbol_name):
 		
-		pdb.set_trace()
 		self.logger.info("Refreshing symbol <{0}>".format(symbol_name))
 		
 		# check if symbol exists
@@ -485,7 +488,7 @@ class LocalSource(Source):
 			self.logger.info("Computed max date: {0}".format(maxdate.strftime("%Y-%m-%d")))
 		
 		filename = OnlineSource().download2csv(symbol_name, mindate=maxdate)
-		self._load_from_csv(symbol_name, filename)
+		self.eod_load_from_csv(symbol_name, filename)
 		
 		
 	def symbol_all_refresh_eod(self):
@@ -559,6 +562,8 @@ class LocalSource(Source):
 		
 		self.logger.info("Loading index {0}".format(index_name))
 
+		pdb.set_trace()
+		
 		try:
 
 			cur = self.conn.cursor()
