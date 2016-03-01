@@ -120,6 +120,10 @@ class Application():
 			self.con.info("You need to open a database first")
 			return
 			
+		w = tksym.WindowAdd(self.root, self.source)
+		self.symbolsList.refresh(self.source)
+		
+			
 	def symbol_refreshEoD(self):
 	
 		selectedIndexes = self.symbolsList.get_selected()
