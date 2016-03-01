@@ -17,8 +17,8 @@ import pdb
 
 VERSION="0.0.2"
 
-# DEFAULT_DATABASE_PATH="/home/marco/lab/pymta/yahoo.db3"
-DEFAULT_DATABASE_PATH="C:/mg/lab/pymta/yahoo.db3"
+DEFAULT_DATABASE_PATH="/home/marco/lab/pymta/devdb.db3"
+#DEFAULT_DATABASE_PATH="C:/mg/lab/pymta/devdb.db3"
 
 class Application():
 
@@ -76,7 +76,7 @@ class Application():
 		btnFrame.pack(fill=tk.BOTH, expand=0)
 		btnAdd = tk.Button(btnFrame, text="Add new", command=self.symbol_add)
 		btnRefresh = tk.Button(btnFrame, text="Refresh selected", command=self.symbol_refreshEoD)
-        btnPlot = tk.Button(btnFrame, text="Plot selected", command=self.symbol_plot)
+		btnPlot = tk.Button(btnFrame, text="Plot selected", command=self.symbol_plot)
 		btnAdd.pack(side=tk.RIGHT)
 		btnRefresh.pack(side=tk.RIGHT)
 		
@@ -126,6 +126,7 @@ class Application():
 			return
 			
 		w = tksym.WindowAddFromFile(self.root, self.source)
+		self.symbolsList_refresh()
 			
 
 	def symbol_add(self):
@@ -145,6 +146,7 @@ class Application():
 			
 			try:
 				self.con.info("Refreshing symbol {0}".format(symbol))
+				self.log.info("Refreshing symbol {0}".format(symbol))
 				self.source.symbol_refresh_eod(symbol)
 				
 			except Exception, ex:
@@ -170,9 +172,9 @@ class Application():
 			self.symbolsList.insert('', 'end', text=symbol[0], values=[symbol[1], symbol[2]])
 		
 	def symbol_plot(self):
-        
-        pass
-    
+		
+		pass
+	
 	def quit(self):
 	
 		self.root.quit()

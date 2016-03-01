@@ -559,8 +559,6 @@ class LocalSource(Source):
 		"""
 		
 		self.logger.info("Loading index {0}".format(index_name))
-
-		pdb.set_trace()
 		
 		try:
 
