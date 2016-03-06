@@ -1,7 +1,7 @@
 #	FTSE Italia All-Share
 #	ITLMS.MI
 #	http://finance.yahoo.com/q/cp?s=ITLMS.MI
-Symbol	Name	Last Trade	Change	Volume
+#Symbol	Name	Last Trade	Change	Volume
 A2A.MI	A2A S.p.A.	1.0720 11:25AM EDT	Down 0.0520 (4.63%)	21,869,828
 ACE.MI	ACEA S.p.A.	11.77 11:25AM EDT	Down 0.45 (3.68%)	268,896
 ACO.MI	Acotel Group SpA	9.82 11:25AM EDT	Down 0.61 (5.80%)	12,419

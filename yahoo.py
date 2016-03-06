@@ -7,7 +7,7 @@ import csv
 import datetime
 import os
 
-import pdb
+import traceback
 
 URL_CHECK_EXISTENCE = "https://finance.yahoo.com/q?s={0}"
 URL_CSV_DOWNLOAD = "http://real-chart.finance.yahoo.com/table.csv"
@@ -21,16 +21,16 @@ class Source(object):
 	def __init__(self):
 		
 		logging.basicConfig(filename='yahoo.log', level=logging.DEBUG, format='%(asctime)s %(message)s') # log to file
-		self.logger = logging.getLogger(__name__)
+		self.logger = logging.getLogger('yahoo')
 		#~ logging.getLogger().addHandler(self.logger.StreamHandler()) # log to stderr too
 		
-	def _get_closings(self):
+	def symbol_get_closings(self):
 		raise Exception("Not implemented yet")
 
-	def _get_volumes(self):
+	def symbol_get_volumes(self):
 		raise Exception("Not implemented yet")
 
-	def _get_ochlv(self):
+	def symbol_get_ochlv(self):
 		raise Exception("Not implemented yet")
 		
 	def _get_url(self, symbol_name, mindate=None, maxdate=None, historical=True):
@@ -75,6 +75,7 @@ class OnlineSource(Source):
 	def __init__(self):
 		
 		super(OnlineSource, self).__init__()
+		#~ Source.__init__(self)
 
 	def _parsedatestring(self, inputdate):
 		"""Parameters:
@@ -209,7 +210,7 @@ class OnlineSource(Source):
 		been downloaded to.
 		"""
 
-		if not self.exists(symbol_name):
+		if not self.symbol_exists(symbol_name):
 			raise Exception("Symbol {0} does not exists".format(symbol_name))
 			
 		url = self._get_url(symbol_name, mindate, maxdate, True)
@@ -258,7 +259,7 @@ class LocalSource(Source):
 		
 		initialize = False
 		if not os.path.isfile(path):
-			self.logger.info("Data source not existing yet, initializing a new local database.")
+			self.logger.info("Initializing new local database.")
 			initialize = True
 
 		self.conn = sqlite3.connect(path)
@@ -271,6 +272,7 @@ class LocalSource(Source):
 			cur = self.conn.cursor()
 			cur.execute("select * from DAT_EoD limit 1")
 		except Exception, ex:
+			self.log.error(traceback.format_exc())
 			raise Exception("Table DAT_EoD not found. Are you sure this is a proper data source ?")
 
 
@@ -444,7 +446,7 @@ class LocalSource(Source):
 	def symbol_add(self, symbol_name, symbol_descr=None):
 		"""Add given symbol to database"""
 		
-		if OnlineSource().exists(symbol_name):
+		if OnlineSource().symbol_exists(symbol_name):
 			cur = self.conn.cursor()
 			cur.execute('INSERT INTO `DAT_Symbol` (`code`, `descr`)'
 				' VALUES (?,?)', (symbol_name, symbol_descr))
@@ -528,7 +530,7 @@ class LocalSource(Source):
 		
 	def symbol_load_from_csv(self, filename, index_name, index_descr=None):
 		"""Parse a CSV file, containing a list of symbols, to populate
-		DAT_symbol table. Loaded symbols will be linked to the newly 
+		DAT_symbol table. Loaded symbols will be linked to a newly 
 		created index ( DAT_index table ).
 		
 		The CSV file is supposed to be UTF-8 encoded.
@@ -555,39 +557,35 @@ class LocalSource(Source):
 		try:
 
 			cur = self.conn.cursor()
-			
-			### insert a new record in DAT_index table ###
 
 			cur.execute("insert into DAT_index (`code`, `descr`)"
 				" values ('{0}', '{1}')".format(index_name, index_descr))
 			
-			### load DAT_symbol and DAT_index_symbol table ###
-			
-			f = open(filename, 'rb')
-			reader = csv.reader(filter(lambda row: row[0]!='#', f), delimiter='\t', )
+			inputFile = open(filename, 'rb')
+			reader = csv.reader(inputFile, delimiter='\t')
 
-			firstRow = True
 			for row in reader:
-
-				# skip first row, 
-				if firstRow:
-					firstRow = False
-					continue
 				
 				self.logger.debug(row)
+				
+				if row == []:
+					continue
+				
+				if row[0][0] == '#':
+					continue
 				
 				# symbol may be already present, no error in that case
 				cur.execute('INSERT OR IGNORE INTO `DAT_symbol` (`code`, `descr`) '
 					'VALUES (?,?)', [row[0], row[1].decode('utf-8')])
 
-				cur.execute('INSERT INTO DAT_index_symbol ( `index`, `symbol`) '
+				cur.execute('INSERT OR IGNORE INTO DAT_index_symbol ( `index`, `symbol`) '
 					'VALUES (?,?)', [index_name, row[0]])
 					
-			f.close()
+			inputFile.close()
 			
 		except Exception, ex:
+			self.logger.error(traceback.format_exc())
 			self.conn.rollback()
-			self.logger.error(ex.message)
 			raise Exception("Cannot parse file {0}".format(filename))
 		
 		self.conn.commit()
@@ -666,7 +664,6 @@ class LocalSource(Source):
 			
 		except Exception, ex:
 			
+			self.log.error(traceback.format_exc())
 			self.logger.error("Cannot truncate table DAT_EoD")
-			self.logger.error(ex)
-
 		

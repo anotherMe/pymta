@@ -31,44 +31,54 @@ def silentremove(filename):
 class OnlineSource(unittest.TestCase):
 	
 	def setUp(self):
+		
 		self.source = yahoo.OnlineSource()
 		
 	def tearDown(self):
+		
 		pass
 		
 	def test_parsedatestring(self):
+		
 		datetime_obj = datetime.datetime.strptime('1974-09-03', '%Y-%m-%d')
 		unixtime = int(datetime_obj.strftime('%s'))
 		self.assertEqual(self.source._parsedatestring('1974-09-03'), unixtime)
 		
-	def test_get_closings(self):
-		rows = self.source._get_closings(ONLINE_TEST_SYMBOL)
+	def test_symbol_get_closings(self):
+		
+		rows = self.source.symbol_get_closings(ONLINE_TEST_SYMBOL)
 		self.assertGreater(len(rows), 0)
 		self.assertEqual(len(rows[0]), 2)
 		
-	def test_get_volumes(self):
-		rows = self.source._get_volumes(ONLINE_TEST_SYMBOL)
+	def test_symbol_get_volumes(self):
+		
+		rows = self.source.symbol_get_volumes(ONLINE_TEST_SYMBOL)
 		self.assertGreater(len(rows), 0)
 		self.assertEqual(len(rows[0]), 2)
 		
-	def test_get_ochlv(self):
-		rows = self.source._get_ochlv(ONLINE_TEST_SYMBOL)
+	def test_symbol_get_ochlv(self):
+		
+		rows = self.source.symbol_get_ochlv(ONLINE_TEST_SYMBOL)
 		self.assertGreater(len(rows), 0)
 		self.assertEqual(len(rows[0]), 6)
 		
-	def test_exists(self):
+	def test_symbol_exists(self):
+		
 		self.assertTrue(self.source.symbol_exists(ONLINE_TEST_SYMBOL))
 
-	def test_exists_not(self):
+	def test_symbol_not_exists(self):
+		
 		self.assertFalse(self.source.symbol_exists('YARGLA.MI'))
 
 	def test_download2csv(self):
+		
 		filename = self.source.download2csv(ONLINE_TEST_SYMBOL)
 		self.assertTrue(os.path.isfile(filename))
 		silentremove(filename)
 
 	def test_get_maxdate(self):
-		maxdate = self.source.get_maxdate(ONLINE_TEST_SYMBOL)
+		
+		maxdate = self.source.symbol_get_maxdate(ONLINE_TEST_SYMBOL)
 		self.assertIsInstance(maxdate, datetime.datetime)
 
 
@@ -105,34 +115,41 @@ class LocalSource(unittest.TestCase):
 		self.assertTrue(rowcount[0] > 0)
 		conn.close()
 
-	def testquery_simple(self):
+	def test_query_simple(self):
+		
 		data = self.source._query("TEST")
 		self.assertTrue(len(data) > 0)
 
-	def testquery_wColumns(self):
+	def test_query_wColumns(self):
+		
 		data = self.source._query("TEST", columns=['date', 'volume', 'close'])
 		self.assertTrue(len(data) > 0)
 	
-	def testsymbol_get_all(self):
+	def test_symbol_get_all(self):
+		
+		self.source.symbol_load_from_csv(CSV_INDEX_FILE, "TEST_INDEX", None)
 		symbols = self.source.symbol_get_all()
 		self.assertTrue( len(symbols) > 0 )
 		
-	def test_get_maxdate(self):
+	def test_symbol_get_maxdate(self):
 		
 		maxdate = self.source.symbol_get_maxdate(TEST_SYMBOL)
 		self.assertIsInstance(maxdate, datetime.datetime)
 
 	def test_symbol_get_closings(self):
+		
 		rows = self.source.symbol_get_closings(TEST_SYMBOL)
 		self.assertGreater(len(rows), 0)
 		self.assertEqual(len(rows[0]), 2)
 		
 	def test_symbol_get_volumes(self):
+		
 		rows = self.source.symbol_get_volumes(TEST_SYMBOL)
 		self.assertGreater(len(rows), 0)
 		self.assertEqual(len(rows[0]), 2)
 		
 	def test_symbol_get_ochlv(self):
+		
 		rows = self.source.symbol_get_ochlv(TEST_SYMBOL)
 		self.assertGreater(len(rows), 0)
 		self.assertEqual(len(rows[0]), 6)
@@ -190,11 +207,7 @@ class LocalSource(unittest.TestCase):
 		self.assertEqual(count_DAT_index, 1)
 		self.assertGreater(count_DAT_index_symbol, 0)
 		self.assertGreater(count_DAT_symbol, 0)
-		
-
-	@unittest.skip("ToDo")
-	def test_refresh_all(self):
-		pass	
+	
 	
 	@unittest.skip("TODO :: proper way to test this method ?")
 	def test_refresh(self):

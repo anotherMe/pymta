@@ -7,14 +7,13 @@ CREATE TABLE "DAT_symbol" (
 	PRIMARY KEY(code)
 );
 
--- link index --> symbol
 CREATE TABLE "DAT_index_symbol" (
 
 	`index`	TEXT NOT NULL,
-	`symbol`	TEXT NOT NULL
+	`symbol`	TEXT NOT NULL,
+	UNIQUE(`index`, `symbol`)
 );
 
--- table for Yahoo indexes ( like FTSEMIB.MI )
 CREATE TABLE "DAT_index" (
 
 	`code`	TEXT NOT NULL,
