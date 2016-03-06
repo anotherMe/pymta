@@ -1,13 +1,15 @@
 #!/usr/bin/env python2
 
 import logging
+#logging.basicConfig(filename='yahoo.log', level=logging.DEBUG, format='%(asctime)s %(message)s')
 import sqlite3
 import urllib
 import csv
 import datetime
 import os
-
+import pdb
 import traceback
+
 
 URL_CHECK_EXISTENCE = "https://finance.yahoo.com/q?s={0}"
 URL_CSV_DOWNLOAD = "http://real-chart.finance.yahoo.com/table.csv"
@@ -20,9 +22,7 @@ class Source(object):
 
 	def __init__(self):
 		
-		logging.basicConfig(filename='yahoo.log', level=logging.DEBUG, format='%(asctime)s %(message)s') # log to file
-		self.logger = logging.getLogger('yahoo')
-		#~ logging.getLogger().addHandler(self.logger.StreamHandler()) # log to stderr too
+		self.log = logging.getLogger(__name__)
 		
 	def symbol_get_closings(self):
 		raise Exception("Not implemented yet")
@@ -228,10 +228,10 @@ class OnlineSource(Source):
 		html = response.read()
 		
 		if "There are no results for the given search term" in html:
-			self.logger.info("Symbol {0} not found in remote database".format(symbol_name))
+			self.log.info("Symbol {0} not found in remote database".format(symbol_name))
 			return False
 		else:
-			self.logger.info("Symbol {0} found in remote database".format(symbol_name))
+			self.log.info("Symbol {0} found in remote database".format(symbol_name))
 			return True
 
 
@@ -259,7 +259,7 @@ class LocalSource(Source):
 		
 		initialize = False
 		if not os.path.isfile(path):
-			self.logger.info("Initializing new local database.")
+			self.log.info("Initializing new local database.")
 			initialize = True
 
 		self.conn = sqlite3.connect(path)
@@ -457,7 +457,7 @@ class LocalSource(Source):
 	
 	def symbol_refresh_eod(self, symbol_name):
 		
-		self.logger.info("Refreshing symbol <{0}>".format(symbol_name))
+		self.log.info("Refreshing symbol <{0}>".format(symbol_name))
 		
 		# check if symbol exists
 		if not self.symbol_exists(symbol_name):
@@ -465,19 +465,19 @@ class LocalSource(Source):
 		
 		maxdate = self.symbol_get_maxdate(symbol_name)
 		if maxdate == None:
-			self.logger.info("No EoD data available for given symbol")
+			self.log.info("No EoD data available for given symbol")
 			maxdate = datetime.datetime(1900,1,1)
 		else:
-			self.logger.info("Max date available: {0}".format(maxdate.strftime("%Y-%m-%d")))
+			self.log.info("Max date available: {0}".format(maxdate.strftime("%Y-%m-%d")))
 			
 			# check if it's up to date
 			delta = datetime.datetime.today() - maxdate
 			if delta.days <= 2:
-				self.logger.info("Already up to date, skipping symbol refresh.")
+				self.log.info("Already up to date, skipping symbol refresh.")
 				return
 				
 			maxdate = maxdate + datetime.timedelta(days=1) # start downloading from the next day
-			self.logger.info("Computed max date: {0}".format(maxdate.strftime("%Y-%m-%d")))
+			self.log.info("Computed max date: {0}".format(maxdate.strftime("%Y-%m-%d")))
 		
 		filename = OnlineSource().download2csv(symbol_name, mindate=maxdate)
 		self.eod_load_from_csv(symbol_name, filename)
@@ -487,11 +487,11 @@ class LocalSource(Source):
 		"""Refresh EoD data for all the symbols stored in the local database"""
 		
 		symbols = self._get_all_symbols()
-		self.logger.info("Found {0} total symbols in database".format(len(symbols)))
+		self.log.info("Found {0} total symbols in database".format(len(symbols)))
 		
 		counter = 1
 		for symbol in symbols:
-			self.logger.info("Refreshing symbol {0}/{1}".format(counter, len(symbols)))
+			self.log.info("Refreshing symbol {0}/{1}".format(counter, len(symbols)))
 			self.refresh(symbol)
 			counter += 1
 		
@@ -552,7 +552,7 @@ class LocalSource(Source):
 			
 		"""
 		
-		self.logger.info("Loading index {0}".format(index_name))
+		self.log.info("Loading index {0}".format(index_name))
 		
 		try:
 
@@ -566,7 +566,7 @@ class LocalSource(Source):
 
 			for row in reader:
 				
-				self.logger.debug(row)
+				self.log.debug(row)
 				
 				if row == []:
 					continue
@@ -584,7 +584,7 @@ class LocalSource(Source):
 			inputFile.close()
 			
 		except Exception, ex:
-			self.logger.error(traceback.format_exc())
+			self.log.error(traceback.format_exc())
 			self.conn.rollback()
 			raise Exception("Cannot parse file {0}".format(filename))
 		
@@ -605,7 +605,7 @@ class LocalSource(Source):
 		these data into local database.
 		"""
 		
-		self.logger.info("Loading data for symbol {0}".format(symbol_name))
+		self.log.info("Loading data for symbol {0}".format(symbol_name))
 		
 		self.delete(symbol_name)	# clean database
 		filename = OnlineSource().download2csv(symbol_name)
@@ -617,11 +617,11 @@ class LocalSource(Source):
 		DAT_symbol."""
 		
 		symbols = self.symbol_get_all()
-		self.logger.info("Found {0} total symbols in database".format(len(symbols)))
+		self.log.info("Found {0} total symbols in database".format(len(symbols)))
 		
 		counter = 1
 		for symbol in symbols:
-			self.logger.info("Loading symbol {0}/{1}".format(counter, len(symbols)))
+			self.log.info("Loading symbol {0}/{1}".format(counter, len(symbols)))
 			self.symbol_load_eod(symbol)
 			counter += 1
 		
@@ -638,12 +638,12 @@ class LocalSource(Source):
 			"where i.code = ?", index_name)
 
 		rows = cur.fetchall()
-		self.logger.info("Found {0} total symbols in given index".format(len(rows)))
+		self.log.info("Found {0} total symbols in given index".format(len(rows)))
 		cur.close()
 		
 		counter = 1
 		for row in rows:
-			self.logger.info("Loading symbol {0}/{1}".format(counter, len(rows)))
+			self.log.info("Loading symbol {0}/{1}".format(counter, len(rows)))
 			self.symbol_load_eod(row[0])
 			counter += 1
 
@@ -665,5 +665,5 @@ class LocalSource(Source):
 		except Exception, ex:
 			
 			self.log.error(traceback.format_exc())
-			self.logger.error("Cannot truncate table DAT_EoD")
+			self.log.error("Cannot truncate table DAT_EoD")
 		

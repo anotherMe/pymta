@@ -1,8 +1,5 @@
 
-import logging as log
-log.basicConfig(filename='market.log', level=log.DEBUG) # log to file
-#~ log.getLogger().addHandler(log.StreamHandler()) # log to stderr too
-
+import logging
 import numpy
 from matplotlib import dates as mdates
 
@@ -91,7 +88,7 @@ class Symbol:
 			
 		"""
 		
-		data = self.source._get_volumes(self.name, self.mindate, self.maxdate)
+		data = self.source.symbol_get_volumes(self.name, self.mindate, self.maxdate)
 
 
 		if self.matplotlib:
@@ -109,7 +106,7 @@ class Symbol:
 			
 		"""
 		
-		data = self.source._get_ochlv(self.name, self.mindate, self.maxdate)
+		data = self.source.symbol_get_ochlv(self.name, self.mindate, self.maxdate)
 		
 		if self.matplotlib:
 			for idx in range(len(data)):
@@ -130,7 +127,7 @@ class Symbol:
 			
 		"""
 		
-		data = self.source._get_closings(self.name, self.mindate, self.maxdate)
+		data = self.source.symbol_get_closings(self.name, self.mindate, self.maxdate)
 
 		if self.matplotlib:
 			for idx in range(len(data)):

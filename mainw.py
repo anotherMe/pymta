@@ -3,19 +3,17 @@
 import sys
 import traceback
 import logging
-
 import Tkinter as tk
 import tkFileDialog
 import ttk
-
 import tklib.console as tkcon
 import tklib.symbol as tksym
-
 import yahoo
-
 import pdb
 
-VERSION="0.0.3"
+
+VERSION="0.0.4"
+
 
 DEFAULT_DATABASE_PATH="/home/marco/lab/pymta/devdb.db3"
 #DEFAULT_DATABASE_PATH="C:/mg/lab/pymta/devdb.db3"
@@ -24,8 +22,8 @@ class Application():
 
 	
 	def __init__(self, root):
-		
-		logging.basicConfig(filename='mainw.log', format='%(asctime)s %(message)s') # log to file
+
+		logging.basicConfig(filename='mainw.log', level=logging.DEBUG, format='%(asctime)s %(message)s')
 		self.log = logging.getLogger(__name__)
 		
 		self.root = root

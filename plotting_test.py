@@ -5,7 +5,10 @@ from plotting import Plotter
 import market
 import argparse
 import datetime
+import logging
 
+logging.basicConfig(filename='plotting_test.log', level=logging.DEBUG, format='%(asctime)s %(message)s') # log to file
+log = logging.getLogger()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('source', help='path to the LocalSource database')
@@ -15,9 +18,10 @@ args = parser.parse_args()
 
 datasource = yahoo.LocalSource(args.source)
 
-mindate = datetime.date.today()
-maxdate = mindate - datetime.timedelta(days=365)
+mindate = '2015-03-01'
+maxdate = '2016-03-01'
 symbol = market.Symbol(datasource, args.symbol, mindate, maxdate, matplotlib=True)
+
 
 p = Plotter('Simple')
 p.draw_simple(symbol)

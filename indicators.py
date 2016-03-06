@@ -1,6 +1,6 @@
 
-import logging as log
-log.basicConfig(filename='indicators.log', level=log.DEBUG) # log to file
+import logging
+#log.basicConfig(filename='indicators.log', level=log.DEBUG) # log to file
 #~ log.getLogger().addHandler(log.StreamHandler()) # log to stderr too
 
 import matplotlib.pyplot as plt
