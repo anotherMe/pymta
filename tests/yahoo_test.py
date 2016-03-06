@@ -4,7 +4,6 @@ import unittest
 import datetime
 import sqlite3
 import os
-import market
 
 import pdb
 

@@ -67,6 +67,7 @@ class PlottingFrame(tk.Frame):
 		s = plotting.Symbol(self.datasource, symbol)
 		p = plotting.Plotter("Drawing symbol {0}".format(symbol))
 		p.draw_simple(s)
+		p.run()
 		
 		
 	def set_datasource(self, newdatasource):

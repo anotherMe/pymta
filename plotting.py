@@ -6,6 +6,7 @@ import numpy
 import logging
 
 import indicators
+import pdb
 
 
 class Plotter:
@@ -14,7 +15,7 @@ class Plotter:
 		self.title = title
 	
 	def draw_simple(self, symbol):
-		
+
 		data = symbol.get_closings()
 		tdata = numpy.transpose(data)
 		plt.plot_date(tdata[0], tdata[1], fmt="-")
@@ -204,14 +205,14 @@ class Symbol:
 	to make the data processable from plotting library.
 	"""
 	
-	def __init__(self, datasource, symbol_name, mindate = None, maxdate = None, matplotlib=False):
+	def __init__(self, datasource, symbol_name, mindate = None, maxdate = None, matplotlib=True):
 		"""Parameters:
 			
 			datasource :: a valid data source
 			symbol_name :: the symbol used to identify the stock; at the moment we use Yahoo convention ( ie: ENI.MI )
 			mindate :: from date
 			maxdate :: to date
-			matplotlib :: say if we should use matplotlib date format 
+			matplotlib :: say if we should use matplotlib date format
 			
 		"""		
 		self.name = symbol_name
