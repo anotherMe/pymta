@@ -62,22 +62,21 @@ class Application():
 		self.symbolsList.pack(fill=tk.BOTH, expand=1)
 		
 		# plot symbols tab - symbols list
-		self.plotSymbolsList = tkplot.SymbolList(plotTab)
-		self.plotSymbolsList.pack(fill=tk.BOTH, expand=1)
+		self.plotFrame = tkplot.PlottingFrame(plotTab)
+		self.plotFrame.pack(fill=tk.BOTH, expand=1)
 		
 		# button bar
 		btnFrame = tk.Frame(manageSymbolsTab)
 		btnFrame.pack(fill=tk.BOTH, expand=0)
 		btnAdd = tk.Button(btnFrame, text="Add new", command=self.symbol_add)
 		btnRefresh = tk.Button(btnFrame, text="Refresh selected", command=self.symbol_refreshEoD)
-		btnPlot = tk.Button(btnFrame, text="Plot selected", command=self.symbol_plot)
 		btnAdd.pack(side=tk.RIGHT)
 		btnRefresh.pack(side=tk.RIGHT)
 		
 		# FIXME: delete following rows
 		self.source = yahoo.LocalSource(DEFAULT_DATABASE_PATH)
 		self.symbolsList.refresh(self.source)
-		self.plotSymbolsList.refresh(self.source)
+		self.plotFrame.refresh(self.source)
 			
 
 	def database_new(self):
@@ -105,7 +104,7 @@ class Application():
 				self.con.error(ex.message)
 			
 			self.symbolsList.refresh(self.source)
-			self.plotSymbolsList.refresh(self.source)
+			self.plotFrame.refresh(self.source)
 	
 	def symbol_load_from_file(self):
 		"""Add a group of symbols starting from one CSV index file"""
@@ -116,7 +115,7 @@ class Application():
 			
 		w = tksym.WindowAddFromFile(self.root, self.source)
 		self.symbolsList.refresh(self.source)
-		self.plotSymbolsList.refresh(self.source)
+		self.plotFrame.refresh(self.source)
 			
 
 	def symbol_add(self):
@@ -128,7 +127,7 @@ class Application():
 			
 		w = tksym.WindowAdd(self.root, self.source)
 		self.symbolsList.refresh(self.source)
-		self.plotSymbolsList.refresh(self.source)
+		self.plotFrame.refresh(self.source)
 		
 			
 	def symbol_refreshEoD(self):
@@ -151,7 +150,7 @@ class Application():
 				continue
 			
 		self.symbolsList.refresh(self.source)
-		self.plotSymbolsList.refresh(self.source)
+		self.plotFrame.refresh(self.source)
 
 		
 	def symbol_plot(self):
