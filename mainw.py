@@ -13,7 +13,7 @@ import yahoo
 import pdb
 
 
-VERSION="0.0.4"
+VERSION="0.0.5"
 
 
 DEFAULT_DATABASE_PATH="/home/marco/lab/pymta/devdb.db3"
