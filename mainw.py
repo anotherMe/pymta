@@ -8,6 +8,7 @@ import tkFileDialog
 import ttk
 import tklib.console as tkcon
 import tklib.symbol as tksym
+import tklib.plot as tkplot
 import yahoo
 import pdb
 
@@ -56,9 +57,13 @@ class Application():
 		# show console window
 		self.con = tkcon.Window(self.root)
 		
-		# symbols list
+		# manage symbols tab - symbols list
 		self.symbolsList = tksym.SymbolList(manageSymbolsTab)
 		self.symbolsList.pack(fill=tk.BOTH, expand=1)
+		
+		# plot symbols tab - symbols list
+		self.plotSymbolsList = tkplot.SymbolList(plotTab)
+		self.plotSymbolsList.pack(fill=tk.BOTH, expand=1)
 		
 		# button bar
 		btnFrame = tk.Frame(manageSymbolsTab)
@@ -72,6 +77,7 @@ class Application():
 		# FIXME: delete following rows
 		self.source = yahoo.LocalSource(DEFAULT_DATABASE_PATH)
 		self.symbolsList.refresh(self.source)
+		self.plotSymbolsList.refresh(self.source)
 			
 
 	def database_new(self):
@@ -99,6 +105,7 @@ class Application():
 				self.con.error(ex.message)
 			
 			self.symbolsList.refresh(self.source)
+			self.plotSymbolsList.refresh(self.source)
 	
 	def symbol_load_from_file(self):
 		"""Add a group of symbols starting from one CSV index file"""
@@ -109,6 +116,7 @@ class Application():
 			
 		w = tksym.WindowAddFromFile(self.root, self.source)
 		self.symbolsList.refresh(self.source)
+		self.plotSymbolsList.refresh(self.source)
 			
 
 	def symbol_add(self):
@@ -120,6 +128,7 @@ class Application():
 			
 		w = tksym.WindowAdd(self.root, self.source)
 		self.symbolsList.refresh(self.source)
+		self.plotSymbolsList.refresh(self.source)
 		
 			
 	def symbol_refreshEoD(self):
@@ -142,6 +151,7 @@ class Application():
 				continue
 			
 		self.symbolsList.refresh(self.source)
+		self.plotSymbolsList.refresh(self.source)
 
 		
 	def symbol_plot(self):

@@ -379,7 +379,8 @@ class LocalSource(Source):
 		# cur.execute("select code, descr from DAT_symbol order by code")
 		cur.execute("select sym.code, sym.descr, eod.maxdate from DAT_Symbol sym "\
 			"left join ( select symbol, date(max(date), 'unixepoch') as maxdate "\
-			"from DAT_EoD group by symbol ) eod on sym.code = eod.symbol")
+			"from DAT_EoD group by symbol ) eod on sym.code = eod.symbol "\
+			"order by sym.code")
 
 		rows = cur.fetchall()
 		cur.close()
@@ -395,17 +396,16 @@ class LocalSource(Source):
 		symbols present in the DAT_Symbol table."""
 		
 		cur = self.conn.cursor()
-		#~ cur.execute("select symbol, strftime('%Y-%m-%d', max(date)) as maxDate from DAT_EoD group by symbol order by symbol")
-		cur.execute("select symbol, date(max(date), 'unixepoch') as maxDate from DAT_EoD group by symbol order by symbol")
+		#~ cur.execute("select symbol, date(max(date), 'unixepoch') as maxDate from DAT_EoD group by symbol order by symbol")
+		cur.execute("select sym.code, sym.descr, eod.maxdate from DAT_Symbol sym "\
+			"inner join ( select symbol, date(max(date), 'unixepoch') as maxdate "\
+			"from DAT_EoD group by symbol ) eod on sym.code = eod.symbol "\
+			"order by sym.code")
 
 		rows = cur.fetchall()
 		cur.close()
 		
-		symbols = []
-		for row in rows:
-			symbols.append([row[0], row[1]])
-
-		return symbols
+		return rows
 		
 		
 	def symbol_get_closings(self, symbol_name, mindate=None, maxdate=None):
