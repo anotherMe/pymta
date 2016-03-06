@@ -381,8 +381,7 @@ if __name__=='__main__':
 	## plotting ##
 
 	datasource = yahoo.LocalSource(args.source)
-	symbol = market.Symbol(datasource, args.symbol, args.mindate, 
-		args.maxdate, matplotlib=True)
+	symbol = Symbol(datasource, args.symbol, args.mindate, args.maxdate, matplotlib=True)
 		
 	if args.type == 'candle':
 		p = Plotter('Candlestick')

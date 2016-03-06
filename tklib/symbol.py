@@ -6,11 +6,13 @@ import tkMessageBox
 
 import pdb
 
+
 class SymbolList(tk.Frame):
 	
-	def __init__(self, master):
+	def __init__(self, master, datasource):
 		
 		tk.Frame.__init__(self, master)
+		self.datasource = datasource
 
 		scrollbar = tk.Scrollbar(self)
 		scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -27,7 +29,7 @@ class SymbolList(tk.Frame):
 		# self.popup.add_command(label="Plot", command=self.symbol_plot)
 		# self.symbolsList.bind("<Button-3>", self.do_popup)
 		
-	def refresh(self, datasource):
+	def refresh(self):
 		"""Rescan database to retrieve all the stored symbols"""
 		
 		items = self.symbolsList.get_children()
@@ -35,7 +37,7 @@ class SymbolList(tk.Frame):
 			for item in items:
 				self.symbolsList.delete(item)
 			
-		symbols = datasource.symbol_get_all()
+		symbols = self.datasource.symbol_get_all()
 		for symbol in symbols:
 			self.symbolsList.insert('', 'end', text=symbol[0], values=[symbol[1], symbol[2]])
 		
@@ -46,6 +48,10 @@ class SymbolList(tk.Frame):
 	def get_item(self, idx):
 		
 		return self.symbolsList.item(idx)
+		
+	def set_datasource(self, newdatasource):
+		
+		self.datasource = newdatasource
 		
 		
 	# def do_popup(self, event):

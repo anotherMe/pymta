@@ -60,11 +60,11 @@ class Application():
 		notebook.add(plotTab, text="Plot")
 		
 		# manage symbols tab - symbols list
-		self.symbolsList = tksym.SymbolList(manageSymbolsTab)
+		self.symbolsList = tksym.SymbolList(manageSymbolsTab, self.source)
 		self.symbolsList.pack(fill=tk.BOTH, expand=1)
 		
 		# plot symbols tab - symbols list
-		self.plotFrame = tkplot.PlottingFrame(plotTab)
+		self.plotFrame = tkplot.PlottingFrame(plotTab, self.source)
 		self.plotFrame.pack(fill=tk.BOTH, expand=1)
 		
 		# button bar
@@ -76,15 +76,24 @@ class Application():
 		btnRefresh.pack(side=tk.RIGHT)
 		
 		# console
-		console = tkcon.Frame(panedWindow)
-		panedWindow.add(console, weight=1)
+		self.console = tkcon.Frame(panedWindow)
+		panedWindow.add(self.console, weight=1)
 
 
 		# FIXME: delete following rows
 		self.source = yahoo.LocalSource(DEFAULT_DATABASE_PATH)
-		self.symbolsList.refresh(self.source)
-		self.plotFrame.refresh(self.source)
+		self.refresh_all()
 			
+			
+	def refresh_all(self):
+		"""Refresh all children widgets."""
+		
+		self.symbolsList.set_datasource(self.source)
+		self.symbolsList.refresh()
+		
+		self.plotFrame.set_datasource(self.source)
+		self.plotFrame.refresh()		
+		
 
 	def database_new(self):
 		"""Create a new database file"""
@@ -92,8 +101,10 @@ class Application():
 		filename = tkFileDialog.asksaveasfilename()
 		
 		if filename:
-			self.con.info("User asked to create a new database named {0}".format(filename))
+			self.console.info("User asked to create a new database named {0}".format(filename))
 			self.source = yahoo.LocalSource(filename)
+		
+		self.refresh_all()
 		
 
 	def database_open(self):
@@ -104,37 +115,35 @@ class Application():
 		if filename:
 		
 			try:
-				self.con.info("Trying to load file {0}".format(filename))
+				self.console.info("Trying to load file {0}".format(filename))
 				self.source = yahoo.LocalSource(filename)
 			except Exception, ex:
-				self.con.critical("Cannot open file {0} as local database".format(filename))
-				self.con.error(ex.message)
+				self.console.critical("Cannot open file {0} as local database".format(filename))
+				self.console.error(ex.message)
 			
-			self.symbolsList.refresh(self.source)
-			self.plotFrame.refresh(self.source)
+			self.refresh_all()
+			
 	
 	def symbol_load_from_file(self):
 		"""Add a group of symbols starting from one CSV index file"""
 		
 		if self.source == None:
-			self.con.info("You need to open a database first")
+			self.console.info("You need to open a database first")
 			return
 			
 		w = tksym.WindowAddFromFile(self.root, self.source)
-		self.symbolsList.refresh(self.source)
-		self.plotFrame.refresh(self.source)
+		self.refresh_all()
 			
 
 	def symbol_add(self):
 		"""Add new symbol to database"""
 		
 		if self.source == None:
-			self.con.info("You need to open a database first")
+			self.console.info("You need to open a database first")
 			return
 			
 		w = tksym.WindowAdd(self.root, self.source)
-		self.symbolsList.refresh(self.source)
-		self.plotFrame.refresh(self.source)
+		self.refresh_all()
 		
 			
 	def symbol_refreshEoD(self):
@@ -146,18 +155,17 @@ class Application():
 			symbol = self.symbolsList.get_item(idx)["text"]
 			
 			try:
-				self.con.info("Refreshing symbol {0}".format(symbol))
+				self.console.info("Refreshing symbol {0}".format(symbol))
 				self.log.info("Refreshing symbol {0}".format(symbol))
 				self.source.symbol_refresh_eod(symbol)
 				
 			except Exception, ex:
 				self.log.error(traceback.format_exc())
-				self.con.error("Cannot refresh symbol {0}".format(symbol))
-				self.con.error(ex.message)
+				self.console.error("Cannot refresh symbol {0}".format(symbol))
+				self.console.error(ex.message)
 				continue
 			
-		self.symbolsList.refresh(self.source)
-		self.plotFrame.refresh(self.source)
+		self.refresh_all()
 
 		
 	def symbol_plot(self):

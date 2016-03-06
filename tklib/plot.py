@@ -10,15 +10,15 @@ import pdb
 
 class PlottingFrame(tk.Frame):
 	
-	def __init__(self, master):
+	def __init__(self, master, datasource):
 		
 		tk.Frame.__init__(self, master)
+		self.datasource = datasource
 
 		panedWindow = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
 		panedWindow.pack(fill=tk.BOTH, expand=1)
 		
 		leftFrame = tk.Frame(panedWindow)
-		#~ leftFrame.pack(fill=tk.BOTH, expand=1)
 		
 		scrollbar = tk.Scrollbar(leftFrame)
 		scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
@@ -32,7 +32,7 @@ class PlottingFrame(tk.Frame):
 		panedWindow.add(leftFrame)
 		
 		rightFrame = tk.Frame(panedWindow)
-		#~ rightFrame.pack(fill=tk.BOTH, expand=1)
+		
 		btnPlot = tk.Button(rightFrame, text="Plot selected", command=self.plot)
 		btnPlot.pack(fill=tk.BOTH, expand=1)
 		
@@ -45,7 +45,7 @@ class PlottingFrame(tk.Frame):
 		# self.symbolsList.bind("<Button-3>", self.do_popup)
 		
 		
-	def refresh(self, datasource):
+	def refresh(self):
 		"""Rescan database to retrieve all symbols with some EoD data"""
 		
 		items = self.symbolsList.get_children()
@@ -53,7 +53,7 @@ class PlottingFrame(tk.Frame):
 			for item in items:
 				self.symbolsList.delete(item)
 			
-		symbols = datasource.symbol_get_all_loaded()
+		symbols = self.datasource.symbol_get_all_loaded()
 		for symbol in symbols:
 			self.symbolsList.insert('', 'end', text=symbol[0], values=[symbol[1], symbol[2]])
 
@@ -63,7 +63,15 @@ class PlottingFrame(tk.Frame):
 		sel = self.symbolsList.selection()
 		item = self.symbolsList.item(sel[0])
 		symbol = item.get('text')
-		pdb.set_trace()
+		
+		s = plotting.Symbol(self.datasource, symbol)
+		p = plotting.Plotter("Drawing symbol {0}".format(symbol))
+		p.draw_simple(s)
+		
+		
+	def set_datasource(self, newdatasource):
+		
+		self.datasource = newdatasource
 		
 		
 	# def do_popup(self, event):
