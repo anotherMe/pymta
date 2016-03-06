@@ -44,18 +44,20 @@ class Application():
 		menubar.add_cascade(label="Tools", menu=toolsmenu)
 		self.root.config(menu=menubar)
 		
+		# paned window
+		panedWindow = ttk.PanedWindow(self.root, orient=tk.VERTICAL)
+		panedWindow.pack(fill=tk.BOTH, expand=1)
+		
 		# notebook
-		notebook = ttk.Notebook(self.root)
-		notebook.pack(fill=tk.BOTH, expand=1)
+		notebook = ttk.Notebook(panedWindow)
+		#~ notebook.pack(fill=tk.BOTH, expand=1)
+		panedWindow.add(notebook, weight=3)
 		
 		# tabs
 		manageSymbolsTab = tk.Frame(notebook)
 		notebook.add(manageSymbolsTab, text="Manage symbols")
 		plotTab = tk.Frame(notebook)
 		notebook.add(plotTab, text="Plot")
-		
-		# show console window
-		self.con = tkcon.Window(self.root)
 		
 		# manage symbols tab - symbols list
 		self.symbolsList = tksym.SymbolList(manageSymbolsTab)
@@ -73,6 +75,11 @@ class Application():
 		btnAdd.pack(side=tk.RIGHT)
 		btnRefresh.pack(side=tk.RIGHT)
 		
+		# console
+		console = tkcon.Frame(panedWindow)
+		panedWindow.add(console, weight=1)
+
+
 		# FIXME: delete following rows
 		self.source = yahoo.LocalSource(DEFAULT_DATABASE_PATH)
 		self.symbolsList.refresh(self.source)

@@ -8,21 +8,16 @@ ERROR="ERROR"
 CRITICAL="CRITICAL"
 
 
-class Window(tk.Toplevel):
+class Frame(tk.Frame):
 	
 	def __init__(self, master):
 		
-		tk.Toplevel.__init__(self, master)
-		
-		self.title("Log console")
-		
-		mainFrame = tk.Frame(self)
-		mainFrame.pack(fill=tk.BOTH, expand=1)
+		tk.Frame.__init__(self, master)
 
-		scrollbar = tk.Scrollbar(mainFrame)
+		scrollbar = tk.Scrollbar(self)
 		scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-		self.console = tk.Text(mainFrame, yscrollcommand=scrollbar.set, bg="black", fg="green")
+		self.console = tk.Text(self, yscrollcommand=scrollbar.set, bg="black", fg="green")
 		self.console.config(state=tk.DISABLED)
 		self.console.pack(fill=tk.BOTH, expand=1)
 		
