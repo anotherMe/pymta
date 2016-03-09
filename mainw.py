@@ -6,14 +6,13 @@ import logging
 import Tkinter as tk
 import tkFileDialog
 import ttk
-import tklib.console as tkcon
 import tklib.symbol as tksym
 import tklib.plot as tkplot
 import yahoo
 import pdb
 
 
-VERSION="0.0.5"
+VERSION="0.0.6"
 
 
 DEFAULT_DATABASE_PATH="/home/marco/lab/pymta/devdb.db3"
@@ -24,8 +23,29 @@ class Application():
 	
 	def __init__(self, root):
 
-		logging.basicConfig(filename='mainw.log', level=logging.DEBUG, format='%(asctime)s %(message)s')
-		self.log = logging.getLogger(__name__)
+
+		# create logger with 'spam_application'
+		self.log = logging.getLogger('main')
+		self.log.setLevel(logging.DEBUG)
+		
+		# create file handler which logs even debug messages
+		fh = logging.FileHandler('mainw.log')
+		fh.setLevel(logging.DEBUG)
+		
+		# create console handler with a higher log level
+		ch = logging.StreamHandler()
+		ch.setLevel(logging.DEBUG)
+		
+		# create formatter and add it to the handlers
+		formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+		fh.setFormatter(formatter)
+		ch.setFormatter(formatter)
+		
+		# add the handlers to the logger
+		self.log.addHandler(fh)
+		self.log.addHandler(ch)
+		
+		self.log.info('testasetat')
 		
 		self.root = root
 		self.source = None
@@ -74,10 +94,6 @@ class Application():
 		btnRefresh = tk.Button(btnFrame, text="Refresh selected", command=self.symbol_refreshEoD)
 		btnAdd.pack(side=tk.RIGHT)
 		btnRefresh.pack(side=tk.RIGHT)
-		
-		# console
-		self.console = tkcon.Frame(panedWindow)
-		panedWindow.add(self.console, weight=1)
 
 
 		# FIXME: delete following rows
@@ -101,7 +117,7 @@ class Application():
 		filename = tkFileDialog.asksaveasfilename()
 		
 		if filename:
-			self.console.info("User asked to create a new database named {0}".format(filename))
+			self.log.info("User asked to create a new database named {0}".format(filename))
 			self.source = yahoo.LocalSource(filename)
 		
 		self.refresh_all()
@@ -115,11 +131,11 @@ class Application():
 		if filename:
 		
 			try:
-				self.console.info("Trying to load file {0}".format(filename))
+				self.log.info("Trying to load file {0}".format(filename))
 				self.source = yahoo.LocalSource(filename)
 			except Exception, ex:
-				self.console.critical("Cannot open file {0} as local database".format(filename))
-				self.console.error(ex.message)
+				self.log.critical("Cannot open file {0} as local database".format(filename))
+				self.log.error(ex.message)
 			
 			self.refresh_all()
 			
@@ -128,7 +144,7 @@ class Application():
 		"""Add a group of symbols starting from one CSV index file"""
 		
 		if self.source == None:
-			self.console.info("You need to open a database first")
+			self.log.info("You need to open a database first")
 			return
 			
 		w = tksym.WindowAddFromFile(self.root, self.source)
@@ -139,7 +155,7 @@ class Application():
 		"""Add new symbol to database"""
 		
 		if self.source == None:
-			self.console.info("You need to open a database first")
+			self.log.info("You need to open a database first")
 			return
 			
 		w = tksym.WindowAdd(self.root, self.source)
@@ -155,14 +171,14 @@ class Application():
 			symbol = self.symbolsList.get_item(idx)["text"]
 			
 			try:
-				self.console.info("Refreshing symbol {0}".format(symbol))
+				self.log.info("Refreshing symbol {0}".format(symbol))
 				self.log.info("Refreshing symbol {0}".format(symbol))
 				self.source.symbol_refresh_eod(symbol)
 				
 			except Exception, ex:
 				self.log.error(traceback.format_exc())
-				self.console.error("Cannot refresh symbol {0}".format(symbol))
-				self.console.error(ex.message)
+				self.log.error("Cannot refresh symbol {0}".format(symbol))
+				self.log.error(ex.message)
 				continue
 			
 		self.refresh_all()

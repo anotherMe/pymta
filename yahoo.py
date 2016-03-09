@@ -22,7 +22,8 @@ class Source(object):
 
 	def __init__(self):
 		
-		self.log = logging.getLogger(__name__)
+		self.log = logging.getLogger('main.yahoo.source')
+		self.log.setLevel(logging.DEBUG)
 		
 	def symbol_get_closings(self):
 		raise Exception("Not implemented yet")
