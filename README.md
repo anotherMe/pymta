@@ -3,9 +3,29 @@
 
 Python toolbox for market technical analysis ( at the moment heavily relying on Yahoo Finance data )
 
+## Installation
 
+( Following install instructions for Debian Jessie stable x86_64 )
 
-##Interface
+Because you can't install Tkinter with pip:
+
+  apt install python-tk
+
+Then:
+
+  apt install pkg-config libfreetype6 libfreetype6-dev libpng3 libpng++-dev 
+
+Create virtualenv and activate:
+
+	virtualenv ENV
+	source ENV/bin/activate
+	
+Install all PIP dependencies:
+
+	pip install -r requirements.txt
+	
+
+## Interface
 
 I've started working on different interfaces to the core libraries. 
 
